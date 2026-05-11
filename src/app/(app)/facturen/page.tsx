@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { listFacturen } from "@/lib/repo/facturen";
 import { listKlanten } from "@/lib/repo/klanten";
+import { money } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +30,12 @@ const STATUS_LABEL = {
   betaald: "Betaald",
   geannuleerd: "Geannuleerd",
 } as const;
+
+function safeFormat(value: unknown, pattern: string): string {
+  if (!value || typeof value !== "string") return "—";
+  const d = new Date(value);
+  return Number.isFinite(d.getTime()) ? format(d, pattern) : "—";
+}
 
 export default async function FacturenPage() {
   const user = await requireUser();
@@ -77,12 +84,12 @@ export default async function FacturenPage() {
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{klantNaam(f.klant_id)}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">
-                      {format(new Date(f.factuurdatum), "d MMM yyyy")} &middot;{" "}
-                      {f.periode_start} → {f.periode_eind}
+                      {safeFormat(f.factuurdatum, "d MMM yyyy")} &middot;{" "}
+                      {f.periode_start || "?"} → {f.periode_eind || "?"}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-semibold tabular-nums">€ {f.totaal_incl_btw.toFixed(2)}</div>
+                    <div className="font-semibold tabular-nums">{money(f.totaal_incl_btw)}</div>
                     <div className="text-xs text-muted-foreground">incl. btw</div>
                   </div>
                 </div>
@@ -112,14 +119,14 @@ export default async function FacturenPage() {
                       </Link>
                     </TableCell>
                     <TableCell className="tabular-nums">
-                      {format(new Date(f.factuurdatum), "d MMM yyyy")}
+                      {safeFormat(f.factuurdatum, "d MMM yyyy")}
                     </TableCell>
                     <TableCell>{klantNaam(f.klant_id)}</TableCell>
                     <TableCell className="text-muted-foreground tabular-nums">
                       {f.periode_start} → {f.periode_eind}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      € {f.totaal_incl_btw.toFixed(2)}
+                      {money(f.totaal_incl_btw)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[f.status]}>{STATUS_LABEL[f.status]}</Badge>

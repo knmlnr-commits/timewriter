@@ -36,6 +36,13 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
   try {
     const klant = await getKlant(user.id, parsed.data.klant_id);
     if (!klant) return { ok: false, error: "Klant niet gevonden." };
+
+    // Defensieve defaults: oudere klant-records kunnen velden missen waardoor
+    // berekeningen NaN opleveren, wat JSON-geserialiseerd null wordt en de
+    // detailpagina laat crashen op .toFixed().
+    const btwPct = Number.isFinite(klant.btw_percentage) ? klant.btw_percentage : 21;
+    const termijn = Number.isFinite(klant.betaaltermijn_dagen) ? klant.betaaltermijn_dagen : 30;
+
     const regels: FactuurRegel[] = parsed.data.regels.map((r) => ({
       omschrijving: r.omschrijving,
       aantal_uren: round2(r.aantal_uren),
@@ -44,7 +51,7 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
       tijd_ids: r.tijd_ids,
     }));
     const totaal_excl_btw = round2(regels.reduce((s, r) => s + r.bedrag, 0));
-    const btw_bedrag = round2(totaal_excl_btw * (klant.btw_percentage / 100));
+    const btw_bedrag = round2(totaal_excl_btw * (btwPct / 100));
     const totaal_incl_btw = round2(totaal_excl_btw + btw_bedrag);
 
     const factuur = await createFactuur(user.id, {
@@ -52,10 +59,10 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
       periode_start: parsed.data.periode_start,
       periode_eind: parsed.data.periode_eind,
       factuurdatum: parsed.data.factuurdatum,
-      vervaldatum: format(addDays(new Date(parsed.data.factuurdatum), klant.betaaltermijn_dagen), "yyyy-MM-dd"),
+      vervaldatum: format(addDays(new Date(parsed.data.factuurdatum), termijn), "yyyy-MM-dd"),
       regels,
       totaal_excl_btw,
-      btw_percentage: klant.btw_percentage,
+      btw_percentage: btwPct,
       btw_bedrag,
       totaal_incl_btw,
       status: "concept",

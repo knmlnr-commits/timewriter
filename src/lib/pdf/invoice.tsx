@@ -3,6 +3,13 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import type { Factuur, Klant } from "@/lib/types";
 import type { Profile } from "@/lib/auth";
+import { money, numFixed, nullableNumber } from "@/lib/format";
+
+function fmtPdfDate(value: unknown, pattern = "d MMMM yyyy"): string {
+  if (!value || typeof value !== "string") return "—";
+  const d = new Date(value);
+  return Number.isFinite(d.getTime()) ? format(d, pattern, { locale: nl }) : "—";
+}
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: "Helvetica", color: "#18181b" },
@@ -63,17 +70,17 @@ export function InvoiceDocument({
             </View>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Datum</Text>
-              <Text>{format(new Date(factuur.factuurdatum), "d MMMM yyyy", { locale: nl })}</Text>
+              <Text>{fmtPdfDate(factuur.factuurdatum)}</Text>
             </View>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Vervaldatum</Text>
-              <Text>{format(new Date(factuur.vervaldatum), "d MMMM yyyy", { locale: nl })}</Text>
+              <Text>{fmtPdfDate(factuur.vervaldatum)}</Text>
             </View>
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Periode</Text>
               <Text>
-                {format(new Date(factuur.periode_start), "d MMM", { locale: nl })} -{" "}
-                {format(new Date(factuur.periode_eind), "d MMM yyyy", { locale: nl })}
+                {fmtPdfDate(factuur.periode_start, "d MMM")} -{" "}
+                {fmtPdfDate(factuur.periode_eind, "d MMM yyyy")}
               </Text>
             </View>
           </View>
@@ -96,12 +103,12 @@ export function InvoiceDocument({
             <Text style={[styles.th, styles.colNum]}>Tarief</Text>
             <Text style={[styles.th, styles.colNum]}>Bedrag</Text>
           </View>
-          {factuur.regels.map((r, i) => (
+          {(Array.isArray(factuur.regels) ? factuur.regels : []).map((r, i) => (
             <View key={i} style={styles.tr}>
-              <Text style={[styles.td, styles.colDesc]}>{r.omschrijving}</Text>
-              <Text style={[styles.td, styles.colNum]}>{r.aantal_uren.toFixed(2)}</Text>
-              <Text style={[styles.td, styles.colNum]}>€ {r.uurtarief.toFixed(2)}</Text>
-              <Text style={[styles.td, styles.colNum]}>€ {r.bedrag.toFixed(2)}</Text>
+              <Text style={[styles.td, styles.colDesc]}>{r.omschrijving || "—"}</Text>
+              <Text style={[styles.td, styles.colNum]}>{numFixed(r.aantal_uren)}</Text>
+              <Text style={[styles.td, styles.colNum]}>{money(r.uurtarief)}</Text>
+              <Text style={[styles.td, styles.colNum]}>{money(r.bedrag)}</Text>
             </View>
           ))}
         </View>
@@ -109,16 +116,18 @@ export function InvoiceDocument({
         <View style={styles.totals}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotaal</Text>
-            <Text style={styles.totalValue}>€ {factuur.totaal_excl_btw.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{money(factuur.totaal_excl_btw)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>BTW {factuur.btw_percentage.toFixed(0)}%</Text>
-            <Text style={styles.totalValue}>€ {factuur.btw_bedrag.toFixed(2)}</Text>
+            <Text style={styles.totalLabel}>
+              BTW {nullableNumber(factuur.btw_percentage) ?? 0}%
+            </Text>
+            <Text style={styles.totalValue}>{money(factuur.btw_bedrag)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={[styles.totalLabel, styles.totalFinal, brandStyle]}>Totaal</Text>
             <Text style={[styles.totalValue, styles.totalFinal, brandStyle]}>
-              € {factuur.totaal_incl_btw.toFixed(2)}
+              {money(factuur.totaal_incl_btw)}
             </Text>
           </View>
         </View>

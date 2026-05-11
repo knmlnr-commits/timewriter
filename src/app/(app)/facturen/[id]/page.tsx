@@ -6,6 +6,7 @@ import { ArrowLeft, FileDown, FileSpreadsheet } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { getFactuur } from "@/lib/repo/facturen";
 import { getKlant } from "@/lib/repo/klanten";
+import { money, numFixed, percent } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,12 +34,26 @@ const STATUS_LABEL = {
   geannuleerd: "Geannuleerd",
 } as const;
 
+export const dynamic = "force-dynamic";
+
+function safeDate(value: unknown): Date | null {
+  if (!value || typeof value !== "string") return null;
+  const d = new Date(value);
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
+function fmtDate(value: unknown, pattern = "d MMMM yyyy"): string {
+  const d = safeDate(value);
+  return d ? format(d, pattern, { locale: nl }) : "—";
+}
+
 export default async function FactuurPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
   const factuur = await getFactuur(user.id, id);
   if (!factuur) notFound();
   const klant = await getKlant(user.id, factuur.klant_id);
+  const regels = Array.isArray(factuur.regels) ? factuur.regels : [];
 
   return (
     <div className="space-y-6">
@@ -48,8 +63,7 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Factuur {factuur.factuurnummer}</h1>
             <p className="text-sm text-muted-foreground">
-              {klant?.naam ?? "Onbekende klant"} ·{" "}
-              {format(new Date(factuur.factuurdatum), "d MMMM yyyy", { locale: nl })}
+              {klant?.naam ?? "Onbekende klant"} &middot; {fmtDate(factuur.factuurdatum)}
             </p>
           </div>
         </div>
@@ -77,19 +91,23 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
         <CardContent>
           {/* Mobiel: regel-cards */}
           <div className="md:hidden space-y-2">
-            {factuur.regels.map((r, i) => (
-              <div key={i} className="rounded-md border p-3 space-y-1">
-                <p className="text-sm font-medium">{r.omschrijving}</p>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {r.aantal_uren.toFixed(2)} u &middot; € {r.uurtarief.toFixed(2)}/u
-                  </span>
-                  <span className="font-semibold text-foreground tabular-nums">
-                    € {r.bedrag.toFixed(2)}
-                  </span>
+            {regels.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geen regels.</p>
+            ) : (
+              regels.map((r, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-1">
+                  <p className="text-sm font-medium">{r.omschrijving || "—"}</p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {numFixed(r.aantal_uren)} u &middot; {money(r.uurtarief)}/u
+                    </span>
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {money(r.bedrag)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Tablet+: tabel */}
@@ -104,12 +122,12 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {factuur.regels.map((r, i) => (
+                {regels.map((r, i) => (
                   <TableRow key={i}>
-                    <TableCell>{r.omschrijving}</TableCell>
-                    <TableCell className="text-right tabular-nums">{r.aantal_uren.toFixed(2)}</TableCell>
-                    <TableCell className="text-right tabular-nums">€ {r.uurtarief.toFixed(2)}</TableCell>
-                    <TableCell className="text-right tabular-nums">€ {r.bedrag.toFixed(2)}</TableCell>
+                    <TableCell>{r.omschrijving || "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{numFixed(r.aantal_uren)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{money(r.uurtarief)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{money(r.bedrag)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -117,11 +135,11 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
           </div>
           <div className="mt-4 grid grid-cols-2 gap-1 text-sm md:max-w-sm md:ml-auto">
             <span className="text-muted-foreground">Subtotaal</span>
-            <span className="text-right tabular-nums">€ {factuur.totaal_excl_btw.toFixed(2)}</span>
-            <span className="text-muted-foreground">BTW ({factuur.btw_percentage}%)</span>
-            <span className="text-right tabular-nums">€ {factuur.btw_bedrag.toFixed(2)}</span>
+            <span className="text-right tabular-nums">{money(factuur.totaal_excl_btw)}</span>
+            <span className="text-muted-foreground">BTW ({percent(factuur.btw_percentage)})</span>
+            <span className="text-right tabular-nums">{money(factuur.btw_bedrag)}</span>
             <span className="font-semibold">Totaal</span>
-            <span className="text-right font-semibold tabular-nums">€ {factuur.totaal_incl_btw.toFixed(2)}</span>
+            <span className="text-right font-semibold tabular-nums">{money(factuur.totaal_incl_btw)}</span>
           </div>
         </CardContent>
       </Card>
@@ -132,14 +150,14 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <Row label="Periode">
-            {factuur.periode_start} t/m {factuur.periode_eind}
+            {factuur.periode_start || "—"} t/m {factuur.periode_eind || "—"}
           </Row>
-          <Row label="Vervaldatum">{format(new Date(factuur.vervaldatum), "d MMMM yyyy", { locale: nl })}</Row>
+          <Row label="Vervaldatum">{fmtDate(factuur.vervaldatum)}</Row>
           {factuur.verzonden_op ? (
-            <Row label="Verzonden">{format(new Date(factuur.verzonden_op), "d MMMM yyyy HH:mm", { locale: nl })}</Row>
+            <Row label="Verzonden">{fmtDate(factuur.verzonden_op, "d MMMM yyyy HH:mm")}</Row>
           ) : null}
           {factuur.betaald_op ? (
-            <Row label="Betaald">{format(new Date(factuur.betaald_op), "d MMMM yyyy HH:mm", { locale: nl })}</Row>
+            <Row label="Betaald">{fmtDate(factuur.betaald_op, "d MMMM yyyy HH:mm")}</Row>
           ) : null}
           {factuur.notities ? <Row label="Notities">{factuur.notities}</Row> : null}
         </CardContent>
