@@ -52,14 +52,60 @@ export function AdminView({ users, currentId }: { users: Row[]; currentId: strin
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Gebruikers ({users.length})</h2>
-        <Button onClick={() => setCreating(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> Nieuw account
+        <Button onClick={() => setCreating(true)} className="gap-2 shrink-0" aria-label="Nieuw account">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Nieuw account</span>
         </Button>
       </div>
 
-      <Card>
+      {/* Mobiel: card-lijst */}
+      <div className="md:hidden space-y-2">
+        {users.map((u) => (
+          <div key={u.id} className="rounded-xl border bg-card p-3 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium break-all">{u.email}</span>
+                  {u.self ? <Badge variant="muted">jij</Badge> : null}
+                </div>
+                {u.naam ? (
+                  <p className="text-sm text-muted-foreground">{u.naam}</p>
+                ) : null}
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  gemaakt {format(new Date(u.created_at), "yyyy-MM-dd")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-1">
+                {u.is_admin ? (
+                  <Badge variant="soft">beheerder</Badge>
+                ) : u.envAdmin ? (
+                  <Badge variant="outline">env-beheerder</Badge>
+                ) : (
+                  <Badge variant="muted">gebruiker</Badge>
+                )}
+                {u.voltooid ? (
+                  <Badge variant="success">voltooid</Badge>
+                ) : (
+                  <Badge variant="warning">onboarding</Badge>
+                )}
+              </div>
+              <RowActions
+                row={u}
+                currentId={currentId}
+                onReset={() => setResetFor(u)}
+                onChanged={() => router.refresh()}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tablet+: tabel */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>

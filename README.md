@@ -1,8 +1,12 @@
-# TijdRegistratie
+# time-app.nl
 
-Persoonlijke tijdregistratie + facturatie ter vervanging van Harvest, voor freelance / interim werk. Eén hoofdgebruiker plus partner; elk eigen account, eigen data, eigen klanten en projecten.
+> Tijdregistratie zonder gedoe. Houd je uren bij, beheer klanten en stuur in
+> vijf minuten een factuur. Voor freelancers, interim&middot;professionals en
+> kleine teams.
 
-Aan het eind van de maand binnen vijf minuten een correcte factuur, met optionele import vanuit Outlook-agenda (.ics).
+Persoonlijke tijdregistratie + facturatie ter vervanging van Harvest. Eén
+hoofdgebruiker plus partner; elk eigen account, eigen data, eigen klanten en
+projecten. Volledig mobile-first PWA met offline snel-invoer.
 
 ## Tech stack
 

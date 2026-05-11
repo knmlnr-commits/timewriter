@@ -45,7 +45,12 @@ export default async function FacturenPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Facturen</h1>
           <p className="text-sm text-muted-foreground">Overzicht en status van je facturen</p>
         </div>
-        <Button asChild className="gap-2"><Link href="/facturen/nieuw"><Plus className="h-4 w-4" /> Nieuwe factuur</Link></Button>
+        <Button asChild className="gap-2 shrink-0" aria-label="Nieuwe factuur">
+          <Link href="/facturen/nieuw">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nieuwe factuur</span>
+          </Link>
+        </Button>
       </header>
 
       {facturen.length === 0 ? (
@@ -55,36 +60,76 @@ export default async function FacturenPage() {
           action={<Button asChild><Link href="/facturen/nieuw">Nieuwe factuur</Link></Button>}
         />
       ) : (
-        <div className="rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nummer</TableHead>
-                <TableHead>Datum</TableHead>
-                <TableHead>Klant</TableHead>
-                <TableHead>Periode</TableHead>
-                <TableHead className="text-right">Totaal</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {facturen.map((f) => (
-                <TableRow key={f.id} className="cursor-pointer" onClick={() => undefined}>
-                  <TableCell className="font-medium">
-                    <Link href={`/facturen/${f.id}`} className="hover:underline">{f.factuurnummer}</Link>
-                  </TableCell>
-                  <TableCell className="tabular-nums">{format(new Date(f.factuurdatum), "d MMM yyyy")}</TableCell>
-                  <TableCell>{klantNaam(f.klant_id)}</TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">{f.periode_start} → {f.periode_eind}</TableCell>
-                  <TableCell className="text-right tabular-nums">€ {f.totaal_incl_btw.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_VARIANT[f.status]}>{STATUS_LABEL[f.status]}</Badge>
-                  </TableCell>
+        <>
+          {/* Mobiel: card-lijst */}
+          <div className="md:hidden space-y-2">
+            {facturen.map((f) => (
+              <Link
+                key={f.id}
+                href={`/facturen/${f.id}`}
+                className="block rounded-xl border bg-card p-3 active:bg-accent transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{f.factuurnummer}</span>
+                      <Badge variant={STATUS_VARIANT[f.status]}>{STATUS_LABEL[f.status]}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{klantNaam(f.klant_id)}</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {format(new Date(f.factuurdatum), "d MMM yyyy")} &middot;{" "}
+                      {f.periode_start} → {f.periode_eind}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-semibold tabular-nums">€ {f.totaal_incl_btw.toFixed(2)}</div>
+                    <div className="text-xs text-muted-foreground">incl. btw</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Tablet+: tabel */}
+          <div className="hidden md:block rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nummer</TableHead>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Klant</TableHead>
+                  <TableHead>Periode</TableHead>
+                  <TableHead className="text-right">Totaal</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {facturen.map((f) => (
+                  <TableRow key={f.id} className="cursor-pointer" onClick={() => undefined}>
+                    <TableCell className="font-medium">
+                      <Link href={`/facturen/${f.id}`} className="hover:underline">
+                        {f.factuurnummer}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {format(new Date(f.factuurdatum), "d MMM yyyy")}
+                    </TableCell>
+                    <TableCell>{klantNaam(f.klant_id)}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {f.periode_start} → {f.periode_eind}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      € {f.totaal_incl_btw.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_VARIANT[f.status]}>{STATUS_LABEL[f.status]}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
     </div>
   );

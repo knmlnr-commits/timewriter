@@ -1,7 +1,7 @@
 {
-  "name": "TijdRegistratie",
-  "short_name": "TijdReg",
-  "description": "Persoonlijke uren- en factuuradministratie",
+  "name": "time-app.nl",
+  "short_name": "time-app",
+  "description": "Eenvoudig uren bijhouden, klanten en facturen beheren. Zonder gedoe.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

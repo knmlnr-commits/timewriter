@@ -267,7 +267,53 @@ export function NieuweFactuurFlow({
             <CardTitle>Stap 3: regels bewerken</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="overflow-x-auto rounded-md border">
+            {/* Mobiel: regel-cards met gestapelde inputs */}
+            <div className="md:hidden space-y-3">
+              {regels.map((r, idx) => (
+                <div key={idx} className="rounded-md border p-3 space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Omschrijving</Label>
+                    <Input
+                      value={r.omschrijving}
+                      onChange={(e) => updateRegel(idx, { omschrijving: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Uren</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={r.aantal_uren}
+                        onChange={(e) => updateRegel(idx, { aantal_uren: Number(e.target.value) })}
+                        className="text-right"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Uurtarief</Label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        value={r.uurtarief}
+                        onChange={(e) => updateRegel(idx, { uurtarief: Number(e.target.value) })}
+                        className="text-right"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end text-sm">
+                    <span className="text-muted-foreground">Bedrag:&nbsp;</span>
+                    <span className="font-semibold tabular-nums">€ {r.bedrag.toFixed(2)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet+: tabel */}
+            <div className="hidden md:block overflow-x-auto rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>

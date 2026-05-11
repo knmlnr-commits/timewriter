@@ -38,7 +38,7 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList>
             <TabsTrigger value="actief">Actief</TabsTrigger>
@@ -46,17 +46,18 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
           </TabsList>
         </Tabs>
         <div className="flex items-center gap-2">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Zoeken..."
-              className="pl-8 w-56"
+              className="pl-8 w-full sm:w-56"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <Button onClick={() => setEditing("new")} className="gap-2">
-            <Plus className="h-4 w-4" /> Nieuwe klant
+          <Button onClick={() => setEditing("new")} className="gap-2 shrink-0" aria-label="Nieuwe klant">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nieuwe klant</span>
           </Button>
         </div>
       </div>
@@ -68,44 +69,82 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
           action={tab === "actief" ? <Button onClick={() => setEditing("new")}>Nieuwe klant</Button> : undefined}
         />
       ) : (
-        <div className="rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Naam</TableHead>
-                <TableHead>Plaats</TableHead>
-                <TableHead>Uurtarief</TableHead>
-                <TableHead>BTW</TableHead>
-                <TableHead>Termijn</TableHead>
-                <TableHead className="w-1" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((k) => (
-                <TableRow key={k.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {k.naam}
+        <>
+          {/* Mobiel: card-lijst */}
+          <div className="md:hidden space-y-2">
+            {filtered.map((k) => (
+              <div key={k.id} className="rounded-xl border bg-card p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium">{k.naam}</h3>
                       {k.archief ? <Badge variant="muted">Archief</Badge> : null}
                     </div>
                     {k.factuur_email ? (
-                      <div className="text-xs text-muted-foreground">{k.factuur_email}</div>
+                      <p className="text-xs text-muted-foreground truncate">{k.factuur_email}</p>
                     ) : null}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{k.factuur_plaats || "—"}</TableCell>
-                  <TableCell className="tabular-nums">
-                    {k.standaard_uurtarief != null ? `€ ${k.standaard_uurtarief.toFixed(2)}` : "—"}
-                  </TableCell>
-                  <TableCell>{k.btw_percentage}%</TableCell>
-                  <TableCell>{k.betaaltermijn_dagen} d</TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <RowActions klant={k} onEdit={() => setEditing(k)} />
-                  </TableCell>
+                    {k.factuur_plaats ? (
+                      <p className="text-xs text-muted-foreground">{k.factuur_plaats}</p>
+                    ) : null}
+                  </div>
+                  <div className="text-right shrink-0">
+                    {k.standaard_uurtarief != null ? (
+                      <div className="font-semibold tabular-nums">€ {k.standaard_uurtarief.toFixed(2)}</div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">geen tarief</div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      {k.btw_percentage}% &middot; {k.betaaltermijn_dagen}d
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <RowActions klant={k} onEdit={() => setEditing(k)} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet+: tabel */}
+          <div className="hidden md:block rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Naam</TableHead>
+                  <TableHead>Plaats</TableHead>
+                  <TableHead>Uurtarief</TableHead>
+                  <TableHead>BTW</TableHead>
+                  <TableHead>Termijn</TableHead>
+                  <TableHead className="w-1" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((k) => (
+                  <TableRow key={k.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {k.naam}
+                        {k.archief ? <Badge variant="muted">Archief</Badge> : null}
+                      </div>
+                      {k.factuur_email ? (
+                        <div className="text-xs text-muted-foreground">{k.factuur_email}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{k.factuur_plaats || "—"}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {k.standaard_uurtarief != null ? `€ ${k.standaard_uurtarief.toFixed(2)}` : "—"}
+                    </TableCell>
+                    <TableCell>{k.btw_percentage}%</TableCell>
+                    <TableCell>{k.betaaltermijn_dagen} d</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      <RowActions klant={k} onEdit={() => setEditing(k)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <KlantSheet

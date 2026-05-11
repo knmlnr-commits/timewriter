@@ -18,20 +18,26 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TijdRegistratie",
-    template: "%s · TijdRegistratie",
+    default: "time-app.nl",
+    template: "%s · time-app.nl",
   },
-  description: "Eenvoudige uren- en factuuradministratie",
-  applicationName: "TijdRegistratie",
+  description: "Eenvoudig uren bijhouden, klanten en facturen beheren. Zonder gedoe.",
+  applicationName: "time-app.nl",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "TijdReg",
+    title: "time-app",
     statusBarStyle: "default",
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/apple-touch-icon.svg", type: "image/svg+xml" }],
+  },
+  openGraph: {
+    title: "time-app.nl",
+    description: "Eenvoudig uren bijhouden, klanten en facturen beheren. Zonder gedoe.",
+    type: "website",
+    locale: "nl_NL",
   },
   formatDetection: {
     telephone: false,

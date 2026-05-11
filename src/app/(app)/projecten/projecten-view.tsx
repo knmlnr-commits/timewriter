@@ -47,7 +47,7 @@ export function ProjectenView({ projecten, klanten }: { projecten: Project[]; kl
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList>
             <TabsTrigger value="actief">Actief</TabsTrigger>
@@ -55,17 +55,18 @@ export function ProjectenView({ projecten, klanten }: { projecten: Project[]; kl
           </TabsList>
         </Tabs>
         <div className="flex items-center gap-2">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Zoeken..."
-              className="pl-8 w-56"
+              className="pl-8 w-full sm:w-56"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <Button onClick={() => setEditing("new")} className="gap-2">
-            <Plus className="h-4 w-4" /> Nieuw project
+          <Button onClick={() => setEditing("new")} className="gap-2 shrink-0" aria-label="Nieuw project">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nieuw project</span>
           </Button>
         </div>
       </div>
@@ -77,47 +78,98 @@ export function ProjectenView({ projecten, klanten }: { projecten: Project[]; kl
           action={tab === "actief" ? <Button onClick={() => setEditing("new")}>Nieuw project</Button> : undefined}
         />
       ) : (
-        <div className="rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Project</TableHead>
-                <TableHead>Klant</TableHead>
-                <TableHead>Uurtarief</TableHead>
-                <TableHead>Factureerbaar</TableHead>
-                <TableHead className="w-1" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full"
-                        style={{ background: p.kleur }}
-                        aria-hidden
-                      />
-                      {p.naam}
-                      {p.archief ? <Badge variant="muted">Archief</Badge> : null}
+        <>
+          {/* Mobiel: card-lijst */}
+          <div className="md:hidden space-y-2">
+            {filtered.map((p) => (
+              <div key={p.id} className="rounded-xl border bg-card p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <span
+                      className="mt-1 inline-block h-3 w-3 shrink-0 rounded-full"
+                      style={{ background: p.kleur }}
+                      aria-hidden
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium">{p.naam}</h3>
+                        {p.archief ? <Badge variant="muted">Archief</Badge> : null}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{klantNaam(p.klant_id)}</p>
+                      {p.omschrijving ? (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.omschrijving}</p>
+                      ) : null}
                     </div>
-                    {p.omschrijving ? (
-                      <div className="text-xs text-muted-foreground">{p.omschrijving}</div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{klantNaam(p.klant_id)}</TableCell>
-                  <TableCell className="tabular-nums">
-                    {p.uurtarief != null ? `€ ${p.uurtarief.toFixed(2)}` : "—"}
-                  </TableCell>
-                  <TableCell>{p.factureerbaar ? <Badge variant="soft">Ja</Badge> : <Badge variant="muted">Nee</Badge>}</TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
-                    <RowActions project={p} onEdit={() => setEditing(p)} />
-                  </TableCell>
+                  </div>
+                  <div className="text-right shrink-0">
+                    {p.uurtarief != null ? (
+                      <div className="font-semibold tabular-nums">€ {p.uurtarief.toFixed(2)}</div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground">erft</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  {p.factureerbaar ? (
+                    <Badge variant="soft">Factureerbaar</Badge>
+                  ) : (
+                    <Badge variant="muted">Niet factureerbaar</Badge>
+                  )}
+                  <RowActions project={p} onEdit={() => setEditing(p)} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet+: tabel */}
+          <div className="hidden md:block rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Klant</TableHead>
+                  <TableHead>Uurtarief</TableHead>
+                  <TableHead>Factureerbaar</TableHead>
+                  <TableHead className="w-1" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ background: p.kleur }}
+                          aria-hidden
+                        />
+                        {p.naam}
+                        {p.archief ? <Badge variant="muted">Archief</Badge> : null}
+                      </div>
+                      {p.omschrijving ? (
+                        <div className="text-xs text-muted-foreground">{p.omschrijving}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{klantNaam(p.klant_id)}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {p.uurtarief != null ? `€ ${p.uurtarief.toFixed(2)}` : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {p.factureerbaar ? (
+                        <Badge variant="soft">Ja</Badge>
+                      ) : (
+                        <Badge variant="muted">Nee</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      <RowActions project={p} onEdit={() => setEditing(p)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <ProjectSheet

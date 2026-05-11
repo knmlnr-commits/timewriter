@@ -75,26 +75,46 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
           <CardTitle>Regels</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Omschrijving</TableHead>
-                <TableHead className="w-24 text-right">Uren</TableHead>
-                <TableHead className="w-28 text-right">Uurtarief</TableHead>
-                <TableHead className="w-28 text-right">Bedrag</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {factuur.regels.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell>{r.omschrijving}</TableCell>
-                  <TableCell className="text-right tabular-nums">{r.aantal_uren.toFixed(2)}</TableCell>
-                  <TableCell className="text-right tabular-nums">€ {r.uurtarief.toFixed(2)}</TableCell>
-                  <TableCell className="text-right tabular-nums">€ {r.bedrag.toFixed(2)}</TableCell>
+          {/* Mobiel: regel-cards */}
+          <div className="md:hidden space-y-2">
+            {factuur.regels.map((r, i) => (
+              <div key={i} className="rounded-md border p-3 space-y-1">
+                <p className="text-sm font-medium">{r.omschrijving}</p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {r.aantal_uren.toFixed(2)} u &middot; € {r.uurtarief.toFixed(2)}/u
+                  </span>
+                  <span className="font-semibold text-foreground tabular-nums">
+                    € {r.bedrag.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet+: tabel */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Omschrijving</TableHead>
+                  <TableHead className="w-24 text-right">Uren</TableHead>
+                  <TableHead className="w-28 text-right">Uurtarief</TableHead>
+                  <TableHead className="w-28 text-right">Bedrag</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {factuur.regels.map((r, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{r.omschrijving}</TableCell>
+                    <TableCell className="text-right tabular-nums">{r.aantal_uren.toFixed(2)}</TableCell>
+                    <TableCell className="text-right tabular-nums">€ {r.uurtarief.toFixed(2)}</TableCell>
+                    <TableCell className="text-right tabular-nums">€ {r.bedrag.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
           <div className="mt-4 grid grid-cols-2 gap-1 text-sm md:max-w-sm md:ml-auto">
             <span className="text-muted-foreground">Subtotaal</span>
             <span className="text-right tabular-nums">€ {factuur.totaal_excl_btw.toFixed(2)}</span>

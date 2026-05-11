@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavDrawer } from "./nav-drawer-context";
+import { Logo } from "@/components/logo";
 
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -89,7 +90,7 @@ export function Sidebar({ naam, isAdmin = false }: { naam: string; isAdmin?: boo
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-60 md:flex-col border-r bg-background">
         <div className="flex h-14 items-center border-b px-4">
-          <span className="text-lg font-semibold tracking-tight">TijdRegistratie</span>
+          <Logo size="md" />
         </div>
         {renderNav()}
         <div className="mt-auto border-t p-3 text-xs text-muted-foreground truncate">{naam}</div>

@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSessionUser, isBootstrapAvailable } from "@/lib/auth";
 import { isKvConfigured } from "@/lib/kv";
+import { Logo } from "@/components/logo";
 import { SignupForm } from "./signup-form";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +35,11 @@ export default async function SignupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        <header className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold">Omgeving claimen</h1>
+        <header className="space-y-3 text-center">
+          <div className="flex justify-center">
+            <Logo size="lg" />
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight">Omgeving claimen</h1>
           <p className="text-sm text-muted-foreground">
             Deze omgeving is nog leeg. Het eerste account wordt automatisch
             beheerder.
