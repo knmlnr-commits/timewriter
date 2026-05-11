@@ -82,24 +82,21 @@ export function ProjectenView({ projecten, klanten }: { projecten: Project[]; kl
           {/* Mobiel: card-lijst */}
           <div className="md:hidden space-y-2">
             {filtered.map((p) => (
-              <div key={p.id} className="rounded-xl border bg-card p-3 space-y-2">
+              <div
+                key={p.id}
+                className="rounded-xl border bg-card p-3 space-y-2 border-l-4"
+                style={{ borderLeftColor: p.kleur }}
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 min-w-0 flex-1">
-                    <span
-                      className="mt-1 inline-block h-3 w-3 shrink-0 rounded-full"
-                      style={{ background: p.kleur }}
-                      aria-hidden
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-medium">{p.naam}</h3>
-                        {p.archief ? <Badge variant="muted">Archief</Badge> : null}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{klantNaam(p.klant_id)}</p>
-                      {p.omschrijving ? (
-                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.omschrijving}</p>
-                      ) : null}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium">{p.naam}</h3>
+                      {p.archief ? <Badge variant="muted">Archief</Badge> : null}
                     </div>
+                    <p className="text-xs text-muted-foreground">{klantNaam(p.klant_id)}</p>
+                    {p.omschrijving ? (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.omschrijving}</p>
+                    ) : null}
                   </div>
                   <div className="text-right shrink-0">
                     {p.uurtarief != null ? (

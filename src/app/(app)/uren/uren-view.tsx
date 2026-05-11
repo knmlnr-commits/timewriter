@@ -252,9 +252,10 @@ export function UrenView({
               return (
                 <div
                   key={t.id}
-                  className={`rounded-xl border bg-card p-3 transition-colors ${
+                  className={`rounded-xl border bg-card p-3 transition-colors border-l-4 ${
                     isSelected ? "ring-2 ring-[var(--brand-ring)]" : ""
                   }`}
+                  style={{ borderLeftColor: project?.kleur ?? "var(--border)" }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <button

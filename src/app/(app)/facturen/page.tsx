@@ -15,14 +15,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
 
 const STATUS_VARIANT = {
   concept: "muted",
-  verzonden: "soft",
+  verzonden: "info",
   betaald: "success",
   geannuleerd: "destructive",
 } as const;
+
+const STATUS_COLOR: Record<keyof typeof STATUS_VARIANT, string> = {
+  concept: "var(--muted-foreground)",
+  verzonden: "var(--brand)",
+  betaald: "#16a34a",
+  geannuleerd: "#dc2626",
+};
 
 const STATUS_LABEL = {
   concept: "Concept",
@@ -70,31 +78,40 @@ export default async function FacturenPage() {
         <>
           {/* Mobiel: card-lijst */}
           <div className="md:hidden space-y-2">
-            {facturen.map((f) => (
-              <Link
-                key={f.id}
-                href={`/facturen/${f.id}`}
-                className="block rounded-xl border bg-card p-3 active:bg-accent transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium">{f.factuurnummer}</span>
-                      <Badge variant={STATUS_VARIANT[f.status]}>{STATUS_LABEL[f.status]}</Badge>
+            {facturen.map((f) => {
+              const naam = klantNaam(f.klant_id);
+              return (
+                <Link
+                  key={f.id}
+                  href={`/facturen/${f.id}`}
+                  className="block rounded-xl border bg-card p-3 active:bg-accent transition-colors border-l-4"
+                  style={{ borderLeftColor: STATUS_COLOR[f.status] }}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar name={naam} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium">{f.factuurnummer}</span>
+                        <Badge variant={STATUS_VARIANT[f.status]}>
+                          {STATUS_LABEL[f.status]}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{naam}</p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {safeFormat(f.factuurdatum, "d MMM yyyy")} &middot;{" "}
+                        {f.periode_start || "?"} → {f.periode_eind || "?"}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">{klantNaam(f.klant_id)}</p>
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      {safeFormat(f.factuurdatum, "d MMM yyyy")} &middot;{" "}
-                      {f.periode_start || "?"} → {f.periode_eind || "?"}
-                    </p>
+                    <div className="text-right shrink-0">
+                      <div className="font-semibold tabular-nums">
+                        {money(f.totaal_incl_btw)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">incl. btw</div>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="font-semibold tabular-nums">{money(f.totaal_incl_btw)}</div>
-                    <div className="text-xs text-muted-foreground">incl. btw</div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Tablet+: tabel */}

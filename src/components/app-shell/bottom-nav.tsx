@@ -68,13 +68,20 @@ function NavItem({
     <Link
       href={item.href}
       className={cn(
-        "flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors",
+        "relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
         active
           ? "text-[var(--brand)]"
           : "text-muted-foreground active:text-foreground"
       )}
     >
-      <Icon className="h-5 w-5" />
+      <span
+        className={cn(
+          "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
+          active ? "bg-[var(--brand-soft)]" : "bg-transparent"
+        )}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
       {item.label}
     </Link>
   );

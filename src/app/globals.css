@@ -30,6 +30,21 @@
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.98 0 0);
 
+  /* Semantische accent-kleuren voor dashboard en lijsten.
+     Gekozen zodat ze rustig naast elkaar staan, niet vechtend. */
+  --tint-blue: #eff6ff;     /* sky-50 */
+  --tint-blue-fg: #1d4ed8;  /* blue-700 */
+  --tint-green: #ecfdf5;    /* emerald-50 */
+  --tint-green-fg: #047857; /* emerald-700 */
+  --tint-purple: #f5f3ff;   /* violet-50 */
+  --tint-purple-fg: #6d28d9;/* violet-700 */
+  --tint-orange: #fff7ed;   /* orange-50 */
+  --tint-orange-fg: #c2410c;/* orange-700 */
+  --tint-pink: #fdf2f8;     /* pink-50 */
+  --tint-pink-fg: #be185d;  /* pink-700 */
+  --tint-teal: #f0fdfa;     /* teal-50 */
+  --tint-teal-fg: #0f766e;  /* teal-700 */
+
   /* Brand accent: #E8732A oranje by default, overridable per user */
   --brand: #e8732a;
   --brand-foreground: #ffffff;
@@ -93,6 +108,18 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-soft: var(--brand-soft);
+  --color-tint-blue: var(--tint-blue);
+  --color-tint-blue-fg: var(--tint-blue-fg);
+  --color-tint-green: var(--tint-green);
+  --color-tint-green-fg: var(--tint-green-fg);
+  --color-tint-purple: var(--tint-purple);
+  --color-tint-purple-fg: var(--tint-purple-fg);
+  --color-tint-orange: var(--tint-orange);
+  --color-tint-orange-fg: var(--tint-orange-fg);
+  --color-tint-pink: var(--tint-pink);
+  --color-tint-pink-fg: var(--tint-pink-fg);
+  --color-tint-teal: var(--tint-teal);
+  --color-tint-teal-fg: var(--tint-teal-fg);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);

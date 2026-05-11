@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -74,7 +75,8 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
           <div className="md:hidden space-y-2">
             {filtered.map((k) => (
               <div key={k.id} className="rounded-xl border bg-card p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-3">
+                  <Avatar name={k.naam} size="md" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-medium">{k.naam}</h3>
@@ -122,13 +124,18 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
                 {filtered.map((k) => (
                   <TableRow key={k.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {k.naam}
-                        {k.archief ? <Badge variant="muted">Archief</Badge> : null}
+                      <div className="flex items-center gap-3">
+                        <Avatar name={k.naam} size="sm" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {k.naam}
+                            {k.archief ? <Badge variant="muted">Archief</Badge> : null}
+                          </div>
+                          {k.factuur_email ? (
+                            <div className="text-xs text-muted-foreground">{k.factuur_email}</div>
+                          ) : null}
+                        </div>
                       </div>
-                      {k.factuur_email ? (
-                        <div className="text-xs text-muted-foreground">{k.factuur_email}</div>
-                      ) : null}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{k.factuur_plaats || "—"}</TableCell>
                     <TableCell className="tabular-nums">

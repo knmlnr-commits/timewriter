@@ -7,7 +7,7 @@ import { listKlanten } from "@/lib/repo/klanten";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Clock } from "lucide-react";
+import { Clock, CalendarDays, CalendarRange, Coins } from "lucide-react";
 import { DashboardCharts } from "./charts";
 
 type Sums = { uren: number; omzet: number };
@@ -102,11 +102,36 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Vandaag" {...sums.vandaag} />
-        <StatCard label="Deze week" {...sums.week} />
-        <StatCard label="Deze maand" {...sums.maand} />
-        <StatCard label="Openstaand te factureren" {...openstaandTotaal} highlight />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <StatCard
+          label="Vandaag"
+          uren={sums.vandaag.uren}
+          omzet={sums.vandaag.omzet}
+          icon={<Clock className="h-4 w-4" />}
+          tint="blue"
+        />
+        <StatCard
+          label="Deze week"
+          uren={sums.week.uren}
+          omzet={sums.week.omzet}
+          icon={<CalendarDays className="h-4 w-4" />}
+          tint="green"
+        />
+        <StatCard
+          label="Deze maand"
+          uren={sums.maand.uren}
+          omzet={sums.maand.omzet}
+          icon={<CalendarRange className="h-4 w-4" />}
+          tint="purple"
+        />
+        <StatCard
+          label="Openstaand"
+          uren={openstaandTotaal.uren}
+          omzet={openstaandTotaal.omzet}
+          icon={<Coins className="h-4 w-4" />}
+          tint="orange"
+          highlight
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -170,27 +195,60 @@ export default async function DashboardPage() {
   );
 }
 
+const TINTS = {
+  blue: { bg: "var(--tint-blue)", fg: "var(--tint-blue-fg)" },
+  green: { bg: "var(--tint-green)", fg: "var(--tint-green-fg)" },
+  purple: { bg: "var(--tint-purple)", fg: "var(--tint-purple-fg)" },
+  orange: { bg: "var(--tint-orange)", fg: "var(--tint-orange-fg)" },
+  pink: { bg: "var(--tint-pink)", fg: "var(--tint-pink-fg)" },
+  teal: { bg: "var(--tint-teal)", fg: "var(--tint-teal-fg)" },
+} as const;
+
 function StatCard({
   label,
   uren,
   omzet,
+  icon,
+  tint,
   highlight,
 }: {
   label: string;
   uren: number;
   omzet: number;
+  icon: React.ReactNode;
+  tint: keyof typeof TINTS;
   highlight?: boolean;
 }) {
+  const t = TINTS[tint];
   return (
-    <Card className={highlight ? "border-[var(--brand)] bg-[var(--brand-soft)]" : ""}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <Card
+      className={
+        highlight
+          ? "border-[var(--brand)]/40 shadow-sm"
+          : "border-transparent shadow-sm"
+      }
+      style={{ background: t.bg }}
+    >
+      <CardHeader className="pb-1 flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: t.fg }}>
           {label}
         </CardTitle>
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/70"
+          style={{ color: t.fg }}
+          aria-hidden
+        >
+          {icon}
+        </span>
       </CardHeader>
-      <CardContent className="space-y-1">
-        <div className="text-2xl font-semibold tabular-nums">{uren.toFixed(2)} u</div>
-        <div className="text-sm text-muted-foreground tabular-nums">€ {omzet.toFixed(2)}</div>
+      <CardContent className="space-y-0.5 pt-1">
+        <div className="text-xl sm:text-2xl font-semibold tabular-nums" style={{ color: t.fg }}>
+          {uren.toFixed(2)}
+          <span className="ml-1 text-xs font-normal opacity-70">u</span>
+        </div>
+        <div className="text-xs sm:text-sm tabular-nums" style={{ color: t.fg, opacity: 0.75 }}>
+          € {omzet.toFixed(2)}
+        </div>
       </CardContent>
     </Card>
   );

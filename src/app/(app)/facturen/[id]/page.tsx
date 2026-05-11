@@ -22,7 +22,7 @@ import { FactuurActions } from "./actions-ui";
 
 const STATUS_VARIANT = {
   concept: "muted",
-  verzonden: "soft",
+  verzonden: "info",
   betaald: "success",
   geannuleerd: "destructive",
 } as const;

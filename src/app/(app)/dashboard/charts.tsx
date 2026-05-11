@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -11,6 +12,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+const BAR_PALETTE = [
+  "var(--brand)",
+  "var(--tint-blue-fg)",
+  "var(--tint-green-fg)",
+  "var(--tint-purple-fg)",
+  "var(--tint-teal-fg)",
+  "var(--tint-pink-fg)",
+  "var(--tint-orange-fg)",
+  "#8b5cf6",
+];
 
 export function DashboardCharts(
   props:
@@ -58,7 +70,11 @@ export function DashboardCharts(
             fontSize: 12,
           }}
         />
-        <Bar dataKey="uren" fill="var(--brand)" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="uren" radius={[4, 4, 0, 0]}>
+          {props.data.map((entry, index) => (
+            <Cell key={index} fill={entry.kleur || BAR_PALETTE[index % BAR_PALETTE.length]} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
