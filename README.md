@@ -162,6 +162,30 @@ mee-verwijderd; het account zelf is dan al ontoegankelijk en je houdt audit trai
 - Multi-tenant uitbreiding (gedeelde klanten binnen huishouden); per-user is bewust simpel gehouden
 - Analytics, tracking, externe scripts
 
+## Uren importeren
+
+Op `/uren/import` zitten twee tabs:
+
+**Tekst plakken** &mdash; plak een tabel uit Word, Notion, Excel, of een
+willekeurig tekstbestand. De parser herkent twee formaten automatisch:
+
+| Formaat | Wanneer |
+| --- | --- |
+| **Tab-formaat** | Excel- of Google Sheets-paste: 1 regel per registratie, kolommen door tabs gescheiden. Volgorde: datum &middot; dag (optioneel) &middot; omschrijving &middot; uren. |
+| **Vier-regel-formaat** | Word/Notion tabel-paste: elke 4 opeenvolgende regels zijn 1 registratie (datum, dag, omschrijving, uren). |
+
+Datums: "1 mei", "1 mei 2026", "01-05", "01-05-2026", "2026-05-01".
+Geen jaar? Pakt het bovenaan ingestelde jaar (default huidig).
+Uren: komma, punt of `HH:mm`.
+
+Workflow: plak &rarr; "Lees in" &rarr; kies één project voor alle regels
+(je kunt per regel overrulen) &rarr; controleer in de preview-tabel &rarr;
+"Importeer N regels". Duplicaten (zelfde datum + project + omschrijving +
+uren) worden automatisch overgeslagen, dus opnieuw plakken is veilig.
+
+**.ics-bestand** &mdash; voor wie een Outlook/Apple kalender-export wil
+gebruiken. Zie de eerdere documentatie.
+
 ## Mobiel (PWA)
 
 De webapp is geconfigureerd als Progressive Web App, zodat je 'm op je

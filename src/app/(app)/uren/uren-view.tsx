@@ -173,7 +173,7 @@ export function UrenView({
         <div className="flex items-center gap-2">
           <Timer projecten={projecten.filter((p) => !p.archief)} klanten={klanten} />
           <Button variant="outline" asChild className="gap-2">
-            <Link href="/uren/import"><Upload className="h-4 w-4" /> .ics import</Link>
+            <Link href="/uren/import"><Upload className="h-4 w-4" /> Importeren</Link>
           </Button>
           <Button onClick={() => openSnel()} className="gap-2">Snelle invoer</Button>
         </div>

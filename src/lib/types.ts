@@ -41,7 +41,7 @@ export type Tijdsregistratie = {
   factureerbaar: boolean;
   gefactureerd: boolean;
   factuur_id: ID | null;
-  bron: "handmatig" | "ics_import" | "graph_import";
+  bron: "handmatig" | "ics_import" | "graph_import" | "tekst_import";
   bron_ref: string | null;
   start_tijd: string | null; // HH:mm
   eind_tijd: string | null;
