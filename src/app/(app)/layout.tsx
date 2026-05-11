@@ -1,8 +1,12 @@
+import { Suspense } from "react";
 import { isAdmin, requireUser } from "@/lib/auth";
 import { Sidebar } from "@/components/app-shell/sidebar";
 import { Topbar } from "@/components/app-shell/topbar";
 import { SnelInvoerProvider } from "@/components/snel-invoer/snel-invoer-context";
 import { SnelInvoerDialog } from "@/components/snel-invoer/snel-invoer-dialog";
+import { UrlTrigger } from "@/components/snel-invoer/url-trigger";
+import { MobileFab } from "@/components/mobile-fab";
+import { OfflineQueueRunner } from "@/components/snel-invoer/offline-queue-runner";
 import { listProjecten } from "@/lib/repo/projecten";
 import { listKlanten } from "@/lib/repo/klanten";
 import { redirect } from "next/navigation";
@@ -29,7 +33,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <main className="flex-1 p-4 md:p-6">{children}</main>
         </div>
       </div>
+      <MobileFab />
       <SnelInvoerDialog />
+      <Suspense fallback={null}>
+        <UrlTrigger />
+      </Suspense>
+      <OfflineQueueRunner />
     </SnelInvoerProvider>
   );
 }

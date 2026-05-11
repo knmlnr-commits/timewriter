@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Combobox } from "@/components/ui/combobox";
 import { useSnelInvoer } from "./snel-invoer-context";
+import { enqueue } from "./offline-queue";
 import { createTijdAction } from "@/app/(app)/uren/actions";
 import { format } from "date-fns";
 
@@ -69,21 +70,42 @@ export function SnelInvoerDialog() {
       toast.error("Kies een project");
       return;
     }
+    const payload = {
+      project_id: projectId,
+      datum,
+      uren,
+      omschrijving,
+      factureerbaar: factureerbaar ? ("true" as const) : ("false" as const),
+    };
     const fd = new FormData();
-    fd.set("project_id", projectId);
-    fd.set("datum", datum);
-    fd.set("uren", uren);
-    fd.set("omschrijving", omschrijving);
-    fd.set("factureerbaar", factureerbaar ? "true" : "false");
+    for (const [k, v] of Object.entries(payload)) fd.set(k, v);
+
     startTransition(async () => {
-      const r = await createTijdAction(fd);
-      if (!r.ok) {
-        toast.error(r.error ?? "Opslaan mislukt");
+      // Offline? Direct in de queue, geen poging.
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueue(payload);
+        pushRecent(projectId);
+        toast.info("Offline opgeslagen, wordt verstuurd zodra je weer online bent");
+        close();
         return;
       }
-      pushRecent(projectId);
-      toast.success("Uren toegevoegd");
-      close();
+
+      try {
+        const r = await createTijdAction(fd);
+        if (!r.ok) {
+          toast.error(r.error ?? "Opslaan mislukt");
+          return;
+        }
+        pushRecent(projectId);
+        toast.success("Uren toegevoegd");
+        close();
+      } catch {
+        // Netwerk viel weg tijdens de call
+        enqueue(payload);
+        pushRecent(projectId);
+        toast.info("Verbinding weggevallen, lokaal opgeslagen voor later");
+        close();
+      }
     });
   }
 

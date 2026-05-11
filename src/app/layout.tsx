@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { BrandStyle } from "@/components/brand-style";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { getSessionUser } from "@/lib/auth";
 import "./globals.css";
 
@@ -16,8 +17,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TijdRegistratie",
+  title: {
+    default: "TijdRegistratie",
+    template: "%s · TijdRegistratie",
+  },
   description: "Eenvoudige uren- en factuuradministratie",
+  applicationName: "TijdRegistratie",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "TijdReg",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.svg", type: "image/svg+xml" }],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f10" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -36,6 +64,7 @@ export default async function RootLayout({
         <BrandStyle accent={accent} />
         {children}
         <Toaster richColors position="top-right" />
+        <RegisterServiceWorker />
       </body>
     </html>
   );

@@ -162,6 +162,40 @@ mee-verwijderd; het account zelf is dan al ontoegankelijk en je houdt audit trai
 - Multi-tenant uitbreiding (gedeelde klanten binnen huishouden); per-user is bewust simpel gehouden
 - Analytics, tracking, externe scripts
 
+## Mobiel (PWA)
+
+De webapp is geconfigureerd als Progressive Web App, zodat je 'm op je
+telefoon kunt installeren zonder App Store of Play Store. Eén codebase,
+gewoon naar de productie-URL navigeren en toevoegen aan het beginscherm.
+
+**iOS (Safari)**: open de site → deel-knop → *Voeg toe aan beginscherm*.
+Daarna start-ie zonder Safari-balk in een standalone window.
+
+**Android (Chrome)**: na een paar bezoeken biedt Chrome zelf *Installeren*
+aan, of via menu → *App installeren*.
+
+Wat je krijgt:
+
+- **Eigen icoon en splash** in oranje brand-kleur. Iconen zijn SVG; oudere
+  iOS-versies vallen terug op het hoogste beschikbare formaat.
+- **Floating Action Button** rechtsonder op mobiel (`MobileFab`) opent de
+  snel-invoer in één tap. Op desktop verborgen omdat de topbar dezelfde
+  knop al heeft.
+- **PWA shortcuts** vanaf het home screen-icoon: long-press toont
+  "Snelle invoer", "Dashboard", "Facturen" als directe acties.
+- **Service worker** cachet uitsluitend immutable Next.js-assets en de
+  iconen. HTML-pagina's bewust **niet**: die zijn auth-gebonden en zouden
+  anders andermans data kunnen tonen na een snelle session-switch.
+- **Offline queue**: ben je buiten dekking (trein, lift, vliegtuig) en
+  voer je uren in via de snel-invoer, dan wordt de registratie in
+  localStorage opgeslagen en automatisch verstuurd zodra je weer online
+  bent — bij het volgende `online` event of bij focus op het tab.
+  Eén samenvattende toast meldt hoeveel regels alsnog zijn opgevoerd.
+
+**Push notifications** zijn niet ingebouwd. Voor freelance time tracking
+voegen die weinig toe en het zou een veel grotere infrastructuur vragen
+(VAPID keys, server-side scheduling, browser-specifieke quirks).
+
 ## Conventies
 
 - Nederlandse UI-teksten; Engels in code en commits
