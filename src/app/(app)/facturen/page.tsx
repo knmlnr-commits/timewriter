@@ -129,7 +129,7 @@ export default async function FacturenPage() {
               </TableHeader>
               <TableBody>
                 {facturen.map((f) => (
-                  <TableRow key={f.id} className="cursor-pointer" onClick={() => undefined}>
+                  <TableRow key={f.id}>
                     <TableCell className="font-medium">
                       <Link href={`/facturen/${f.id}`} className="hover:underline">
                         {f.factuurnummer}
