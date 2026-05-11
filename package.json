@@ -1,6 +1,6 @@
 {
   "name": "timewriter",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,6 +16,7 @@
     "users:unadmin": "tsx scripts/users.ts unadmin"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",

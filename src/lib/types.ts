@@ -88,3 +88,25 @@ export type IcsMapping = {
   project_id: ID;
   created_at: string;
 };
+
+export type WeekDay = "ma" | "di" | "wo" | "do" | "vr" | "za" | "zo";
+
+export const WEEK_DAYS: WeekDay[] = ["ma", "di", "wo", "do", "vr", "za", "zo"];
+
+export const WEEK_DAY_LABELS: Record<WeekDay, string> = {
+  ma: "Maandag",
+  di: "Dinsdag",
+  wo: "Woensdag",
+  do: "Donderdag",
+  vr: "Vrijdag",
+  za: "Zaterdag",
+  zo: "Zondag",
+};
+
+export type WeeklyPattern = {
+  id: ID;
+  day: WeekDay;
+  hours: number;
+  project_id: ID;
+  omschrijving: string;
+};

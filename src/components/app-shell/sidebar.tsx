@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Clock,
+  Sparkles,
   Users,
   Briefcase,
   FileText,
@@ -19,6 +20,7 @@ import { Logo } from "@/components/logo";
 
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/uren/chat", label: "Chat", icon: Sparkles },
   { href: "/uren", label: "Uren", icon: Clock },
   { href: "/klanten", label: "Klanten", icon: Users },
   { href: "/projecten", label: "Projecten", icon: Briefcase },

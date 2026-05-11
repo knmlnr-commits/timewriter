@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Clock, ReceiptText, Upload } from "lucide-react";
+import { MessageSquareText, Sparkles, Upload, Zap } from "lucide-react";
 import { getSessionUser, isBootstrapAvailable } from "@/lib/auth";
 import { isKvConfigured } from "@/lib/kv";
 import { LoginForm } from "./login-form";
@@ -9,10 +9,26 @@ import { Logo } from "@/components/logo";
 export const dynamic = "force-dynamic";
 
 const FEATURES = [
-  { icon: Clock, title: "Snel uren bijhouden", body: "1-tap snel-invoer met decimaal of uu:mm. Timer voor lopend werk. Werkt ook offline." },
-  { icon: Upload, title: "Plakken vanuit Word of Excel", body: "Plak je urenoverzicht in een tekstveld of importeer een .ics-export. Geen overtypen." },
-  { icon: ReceiptText, title: "Factuur in 3 stappen", body: "Klant, periode, groeperen. Maakt een nette PDF en Excel met je eigen gegevens." },
-  { icon: CheckCircle2, title: "Eigen omgeving", body: "Eigen account, eigen data. Geen abonnement, geen tracking, geen reclame." },
+  {
+    icon: MessageSquareText,
+    title: "Chat in plaats van forms",
+    body: "Vertel de AI in normaal Nederlands wat je deze week deed. Hij vult de uren in en jij bevestigt.",
+  },
+  {
+    icon: Sparkles,
+    title: "Patronen leren",
+    body: "Stel eenmaal je standaard week in. De AI begint elke week vanaf die basis en vraagt alleen naar afwijkingen.",
+  },
+  {
+    icon: Upload,
+    title: "Of plak een tabel",
+    body: "Voorkeur voor old-school? Plak een Excel- of Word-tabel en de parser zet het om.",
+  },
+  {
+    icon: Zap,
+    title: "Eind van de maand: factuur in 3 stappen",
+    body: "Klant kiezen, periode kiezen, PDF en Excel rollen eruit. Met urendetail als bijlage indien gewenst.",
+  },
 ];
 
 export default async function LoginPage() {
@@ -35,20 +51,24 @@ export default async function LoginPage() {
         <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full opacity-30" style={{ background: "var(--brand)" }} />
         <div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full opacity-20" style={{ background: "var(--brand)" }} />
 
-        <div className="relative">
+        <div className="relative flex items-center justify-between">
           <Logo size="md" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-[var(--brand)] shadow-sm backdrop-blur">
+            <Sparkles className="h-3 w-3" />
+            AI-native
+          </span>
         </div>
 
         <div className="relative space-y-8 max-w-xl">
           <div className="space-y-3">
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-              Tijdregistratie{" "}
-              <span className="text-[var(--brand)]">zonder gedoe</span>.
+              Urenregistratie?{" "}
+              <span className="text-[var(--brand)]">Praat erover</span>.
             </h1>
             <p className="text-lg text-muted-foreground max-w-md">
-              Houd je uren bij, beheer klanten en stuur in vijf minuten een
-              factuur. Voor freelancers, interim&middot;professionals en
-              kleine teams.
+              De eerste uren-tool waar je gewoon kunt zeggen
+              <span className="italic"> &ldquo;maandag standaard, dinsdag was ik vrij, woensdag 6 uur Project X&rdquo;</span>{" "}
+              en de AI doet de rest. Voor freelancers en interim&middot;professionals die liever werken dan administreren.
             </p>
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -67,16 +87,20 @@ export default async function LoginPage() {
         </div>
 
         <div className="relative text-xs text-muted-foreground">
-          time-app.nl &middot; eenvoudig, snel, van jou
+          time-app.nl &middot; tijdregistratie waar je tegen kan praten
         </div>
       </section>
 
       {/* Login formulier */}
       <section className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-6">
-          {/* Compact logo bovenaan op mobiel */}
-          <div className="md:hidden flex justify-center">
+          {/* Compact logo + AI-badge bovenaan op mobiel */}
+          <div className="md:hidden flex flex-col items-center gap-3">
             <Logo size="lg" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-soft)] px-3 py-1 text-xs font-medium text-[var(--brand)]">
+              <Sparkles className="h-3 w-3" />
+              AI-native urenregistratie
+            </span>
           </div>
 
           <header className="space-y-1 text-center">

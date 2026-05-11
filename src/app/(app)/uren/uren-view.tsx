@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Pencil, Trash2, Filter, Upload } from "lucide-react";
+import { Pencil, Trash2, Filter, Upload, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,6 +113,13 @@ export function UrenView({
     <>
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
+          <Button asChild className="gap-2">
+            <Link href="/uren/chat" aria-label="Chat met assistent">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Chat met assistent</span>
+              <span className="sm:hidden">Chat</span>
+            </Link>
+          </Button>
           <Timer projecten={projecten.filter((p) => !p.archief)} klanten={klanten} />
           <Button variant="outline" asChild className="gap-2">
             <Link href="/uren/import" aria-label="Importeren">
@@ -120,7 +127,7 @@ export function UrenView({
               <span className="hidden sm:inline">Importeren</span>
             </Link>
           </Button>
-          <Button onClick={() => openSnel()} className="hidden sm:inline-flex gap-2">
+          <Button onClick={() => openSnel()} variant="outline" className="hidden sm:inline-flex gap-2">
             Snelle invoer
           </Button>
         </div>

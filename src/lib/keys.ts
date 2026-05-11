@@ -47,4 +47,7 @@ export const KEYS = {
   icsMapping: (uid: string, subjectHash: string) =>
     `${NAMESPACE}:user:${uid}:ics-mapping:${subjectHash}`,
   icsMappingIndex: (uid: string) => `${NAMESPACE}:user:${uid}:ics-mapping:index`,
+
+  // default werkweek (chat-assistent gebruikt dit als startpunt)
+  defaultWeek: (uid: string) => `${NAMESPACE}:user:${uid}:default-week`,
 } as const;

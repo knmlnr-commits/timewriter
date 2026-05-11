@@ -362,7 +362,10 @@ export async function changePassword(uid: string, newPassword: string): Promise<
   await kv.set(KEYS.user(uid), next);
 }
 
-export async function setSessionCookie(token: string) {
+export async function setSessionCookie(
+  token: string,
+  opts: { persistent?: boolean } = { persistent: true }
+) {
   const cookieStore = await cookies();
   cookieStore.set({
     name: SESSION_COOKIE,
@@ -371,7 +374,9 @@ export async function setSessionCookie(token: string) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: SESSION_TTL_SEC,
+    // persistent=true: cookie blijft 30 dagen ook na browser-close.
+    // persistent=false: session cookie — verdwijnt als de browser sluit.
+    ...(opts.persistent !== false ? { maxAge: SESSION_TTL_SEC } : {}),
   });
 }
 
