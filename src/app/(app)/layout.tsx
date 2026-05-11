@@ -3,10 +3,11 @@ import { isAdmin, requireUser } from "@/lib/auth";
 import { APP_VERSION } from "@/lib/version";
 import { Sidebar } from "@/components/app-shell/sidebar";
 import { Topbar } from "@/components/app-shell/topbar";
+import { BottomNav } from "@/components/app-shell/bottom-nav";
+import { NavDrawerProvider } from "@/components/app-shell/nav-drawer-context";
 import { SnelInvoerProvider } from "@/components/snel-invoer/snel-invoer-context";
 import { SnelInvoerDialog } from "@/components/snel-invoer/snel-invoer-dialog";
 import { UrlTrigger } from "@/components/snel-invoer/url-trigger";
-import { MobileFab } from "@/components/mobile-fab";
 import { OfflineQueueRunner } from "@/components/snel-invoer/offline-queue-runner";
 import { listProjecten } from "@/lib/repo/projecten";
 import { listKlanten } from "@/lib/repo/klanten";
@@ -23,23 +24,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
 
   return (
-    <SnelInvoerProvider
-      projecten={projecten.filter((p) => !p.archief)}
-      klanten={klanten.filter((k) => !k.archief)}
-    >
-      <div className="flex min-h-screen flex-col md:flex-row">
-        <Sidebar naam={user.profile.naam} isAdmin={isAdmin(user)} />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar email={user.email} version={APP_VERSION} />
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+    <NavDrawerProvider>
+      <SnelInvoerProvider
+        projecten={projecten.filter((p) => !p.archief)}
+        klanten={klanten.filter((k) => !k.archief)}
+      >
+        <div className="flex min-h-screen flex-col md:flex-row">
+          <Sidebar naam={user.profile.naam} isAdmin={isAdmin(user)} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar email={user.email} version={APP_VERSION} />
+            <main className="flex-1 p-4 pb-28 md:p-6 md:pb-6">{children}</main>
+          </div>
         </div>
-      </div>
-      <MobileFab />
-      <SnelInvoerDialog />
-      <Suspense fallback={null}>
-        <UrlTrigger />
-      </Suspense>
-      <OfflineQueueRunner />
-    </SnelInvoerProvider>
+        <BottomNav />
+        <SnelInvoerDialog />
+        <Suspense fallback={null}>
+          <UrlTrigger />
+        </Suspense>
+        <OfflineQueueRunner />
+      </SnelInvoerProvider>
+    </NavDrawerProvider>
   );
 }

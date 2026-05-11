@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
   LayoutDashboard,
   Clock,
@@ -10,12 +9,12 @@ import {
   Briefcase,
   FileText,
   UserCircle,
-  Menu,
   Shield,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavDrawer } from "./nav-drawer-context";
 
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -31,9 +30,9 @@ const ADMIN_NAV = { href: "/admin", label: "Beheer", icon: Shield } as const;
 export function Sidebar({ naam, isAdmin = false }: { naam: string; isAdmin?: boolean }) {
   const NAV = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV;
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useNavDrawer();
 
-  const nav = (
+  const renderNav = (onNavigate?: () => void) => (
     <nav className="flex flex-col gap-1 p-3">
       {NAV.map(({ href, label, icon: Icon }) => {
         const active =
@@ -42,9 +41,9 @@ export function Sidebar({ naam, isAdmin = false }: { naam: string; isAdmin?: boo
           <Link
             key={href}
             href={href}
-            onClick={() => setOpen(false)}
+            onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
               active
                 ? "bg-[var(--brand-soft)] text-[var(--brand)] font-medium"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -60,38 +59,40 @@ export function Sidebar({ naam, isAdmin = false }: { naam: string; isAdmin?: boo
 
   return (
     <>
-      {/* Mobile toggle */}
-      <div className="md:hidden sticky top-0 z-30 flex h-12 items-center justify-between border-b bg-background px-3">
-        <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Menu openen">
-          <Menu className="h-5 w-5" />
-        </Button>
-        <span className="text-sm font-medium">TijdRegistratie</span>
-        <span className="w-9" />
-      </div>
-
       {/* Mobile drawer */}
       {open ? (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-background shadow-xl">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setOpen(false)}
+          />
+          <aside
+            className="absolute inset-y-0 left-0 flex w-72 flex-col bg-background shadow-xl"
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          >
             <div className="flex h-14 items-center justify-between border-b px-4">
-              <span className="font-semibold">{naam}</span>
-              <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Sluiten">
+              <span className="font-semibold truncate">{naam}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setOpen(false)}
+                aria-label="Sluiten"
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            {nav}
+            {renderNav(() => setOpen(false))}
           </aside>
         </div>
       ) : null}
 
-      {/* Desktop */}
+      {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-60 md:flex-col border-r bg-background">
         <div className="flex h-14 items-center border-b px-4">
           <span className="text-lg font-semibold tracking-tight">TijdRegistratie</span>
         </div>
-        {nav}
-        <div className="mt-auto border-t p-3 text-xs text-muted-foreground">{naam}</div>
+        {renderNav()}
+        <div className="mt-auto border-t p-3 text-xs text-muted-foreground truncate">{naam}</div>
       </aside>
     </>
   );

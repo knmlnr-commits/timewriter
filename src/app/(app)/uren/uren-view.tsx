@@ -111,12 +111,25 @@ export function UrenView({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-end gap-3 justify-between">
-        <div className="flex flex-wrap items-end gap-2">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Timer projecten={projecten.filter((p) => !p.archief)} klanten={klanten} />
+          <Button variant="outline" asChild className="gap-2">
+            <Link href="/uren/import" aria-label="Importeren">
+              <Upload className="h-4 w-4" />
+              <span className="hidden sm:inline">Importeren</span>
+            </Link>
+          </Button>
+          <Button onClick={() => openSnel()} className="hidden sm:inline-flex gap-2">
+            Snelle invoer
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-end gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Periode</Label>
             <Select value={periode} onValueChange={onPeriodeChange}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full md:w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="deze-week">Deze week</SelectItem>
                 <SelectItem value="deze-maand">Deze maand</SelectItem>
@@ -129,39 +142,68 @@ export function UrenView({
             <>
               <div className="space-y-1">
                 <Label className="text-xs">Van</Label>
-                <Input type="date" value={van} onChange={(e) => onCustomChange("van", e.target.value)} className="w-40" />
+                <Input
+                  type="date"
+                  value={van}
+                  onChange={(e) => onCustomChange("van", e.target.value)}
+                  className="w-full md:w-40"
+                />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Tot</Label>
-                <Input type="date" value={tot} onChange={(e) => onCustomChange("tot", e.target.value)} className="w-40" />
+                <Input
+                  type="date"
+                  value={tot}
+                  onChange={(e) => onCustomChange("tot", e.target.value)}
+                  className="w-full md:w-40"
+                />
               </div>
             </>
           ) : null}
           <div className="space-y-1">
             <Label className="text-xs">Klant</Label>
-            <Select value={filter.klantId} onValueChange={(v) => setFilter({ ...filter, klantId: v })}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <Select
+              value={filter.klantId}
+              onValueChange={(v) => setFilter({ ...filter, klantId: v })}
+            >
+              <SelectTrigger className="w-full md:w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle klanten</SelectItem>
                 <SelectItem value="__none__">Persoonlijk / overig</SelectItem>
-                {klanten.filter((k) => !k.archief).map((k) => <SelectItem key={k.id} value={k.id}>{k.naam}</SelectItem>)}
+                {klanten
+                  .filter((k) => !k.archief)
+                  .map((k) => (
+                    <SelectItem key={k.id} value={k.id}>{k.naam}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Project</Label>
-            <Select value={filter.projectId} onValueChange={(v) => setFilter({ ...filter, projectId: v })}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <Select
+              value={filter.projectId}
+              onValueChange={(v) => setFilter({ ...filter, projectId: v })}
+            >
+              <SelectTrigger className="w-full md:w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle projecten</SelectItem>
-                {projecten.filter((p) => !p.archief).map((p) => <SelectItem key={p.id} value={p.id}>{p.naam}</SelectItem>)}
+                {projecten
+                  .filter((p) => !p.archief)
+                  .map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.naam}</SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 col-span-2 md:col-span-1">
             <Label className="text-xs">Status</Label>
-            <Select value={filter.gefactureerd} onValueChange={(v) => setFilter({ ...filter, gefactureerd: v as Filter["gefactureerd"] })}>
-              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <Select
+              value={filter.gefactureerd}
+              onValueChange={(v) =>
+                setFilter({ ...filter, gefactureerd: v as Filter["gefactureerd"] })
+              }
+            >
+              <SelectTrigger className="w-full md:w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alles</SelectItem>
                 <SelectItem value="no">Nog niet gefactureerd</SelectItem>
@@ -169,13 +211,6 @@ export function UrenView({
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Timer projecten={projecten.filter((p) => !p.archief)} klanten={klanten} />
-          <Button variant="outline" asChild className="gap-2">
-            <Link href="/uren/import"><Upload className="h-4 w-4" /> Importeren</Link>
-          </Button>
-          <Button onClick={() => openSnel()} className="gap-2">Snelle invoer</Button>
         </div>
       </div>
 
@@ -199,57 +234,199 @@ export function UrenView({
           action={<Button onClick={() => openSnel()}>Uren toevoegen</Button>}
         />
       ) : (
-        <div className="rounded-xl border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">
-                  <Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} />
-                </TableHead>
-                <TableHead>Datum</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead className="text-right">Uren</TableHead>
-                <TableHead>Omschrijving</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-1" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((t) => {
-                const { project, klant } = projectInfo(t.project_id);
-                return (
-                  <TableRow key={t.id}>
-                    <TableCell><Checkbox checked={selected.has(t.id)} onCheckedChange={() => toggle(t.id)} /></TableCell>
-                    <TableCell className="tabular-nums">{t.datum}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: project?.kleur ?? "#777" }} aria-hidden />
-                        <div>
-                          <div className="text-sm font-medium">{project?.naam ?? "Onbekend"}</div>
-                          <div className="text-xs text-muted-foreground">{klant?.naam ?? "Persoonlijk"}</div>
+        <>
+          {/* Mobiel: card-lijst */}
+          <div className="md:hidden space-y-2">
+            {filtered.length > 1 ? (
+              <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={selected.size === filtered.length}
+                  onCheckedChange={toggleAll}
+                />
+                Alles selecteren
+              </label>
+            ) : null}
+            {filtered.map((t) => {
+              const { project, klant } = projectInfo(t.project_id);
+              const isSelected = selected.has(t.id);
+              return (
+                <div
+                  key={t.id}
+                  className={`rounded-xl border bg-card p-3 transition-colors ${
+                    isSelected ? "ring-2 ring-[var(--brand-ring)]" : ""
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggle(t.id)}
+                      className="flex min-w-0 flex-1 items-start gap-2 text-left"
+                      aria-label={isSelected ? "Deselecteer" : "Selecteer"}
+                    >
+                      <span
+                        className="mt-1 inline-block h-3 w-3 shrink-0 rounded-full"
+                        style={{ background: project?.kleur ?? "#777" }}
+                        aria-hidden
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium leading-tight">
+                            {project?.naam ?? "Onbekend"}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {klant?.naam ?? "Persoonlijk"} · {t.datum}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatUren(t.uren)}</TableCell>
-                    <TableCell className="max-w-xs truncate text-muted-foreground">{t.omschrijving}</TableCell>
-                    <TableCell className="space-x-1">
-                      {t.gefactureerd ? <Badge variant="success">Gefactureerd</Badge> : t.factureerbaar ? <Badge variant="soft">Open</Badge> : <Badge variant="muted">Niet factureerbaar</Badge>}
-                      {t.bron !== "handmatig" ? <Badge variant="outline">ics</Badge> : null}
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <Button variant="ghost" size="icon" onClick={() => setEditing(t)} aria-label="Bewerken"><Pencil className="h-4 w-4" /></Button>
+                    </button>
+                    <div className="text-right shrink-0">
+                      <div className="font-semibold tabular-nums">
+                        {formatUren(t.uren)}
+                      </div>
+                    </div>
+                  </div>
+                  {t.omschrijving ? (
+                    <p className="mt-2 text-sm text-muted-foreground break-words">
+                      {t.omschrijving}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {t.gefactureerd ? (
+                        <Badge variant="success">Gefactureerd</Badge>
+                      ) : t.factureerbaar ? (
+                        <Badge variant="soft">Open</Badge>
+                      ) : (
+                        <Badge variant="muted">Niet factureerbaar</Badge>
+                      )}
+                      {t.bron !== "handmatig" ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          {t.bron === "ics_import" ? "ics" : t.bron === "tekst_import" ? "plak" : "ext"}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditing(t)}
+                        aria-label="Bewerken"
+                        className="h-9 w-9"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <DeleteBtn id={t.id} disabled={t.gefactureerd} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <div className="flex items-center justify-end gap-4 border-t p-3 text-sm">
-            <span className="text-muted-foreground">{filtered.length} regels</span>
-            <span className="font-medium tabular-nums">Totaal: {formatUren(total)} u</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex items-center justify-between gap-4 px-1 pt-2 text-sm">
+              <span className="text-muted-foreground">{filtered.length} regels</span>
+              <span className="font-medium tabular-nums">
+                Totaal: {formatUren(total)} u
+              </span>
+            </div>
           </div>
-        </div>
+
+          {/* Tablet + desktop: tabel */}
+          <div className="hidden md:block rounded-xl border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">
+                    <Checkbox
+                      checked={
+                        selected.size === filtered.length && filtered.length > 0
+                      }
+                      onCheckedChange={toggleAll}
+                    />
+                  </TableHead>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead className="text-right">Uren</TableHead>
+                  <TableHead>Omschrijving</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-1" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((t) => {
+                  const { project, klant } = projectInfo(t.project_id);
+                  return (
+                    <TableRow key={t.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.has(t.id)}
+                          onCheckedChange={() => toggle(t.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="tabular-nums">{t.datum}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block h-2.5 w-2.5 rounded-full"
+                            style={{ background: project?.kleur ?? "#777" }}
+                            aria-hidden
+                          />
+                          <div>
+                            <div className="text-sm font-medium">
+                              {project?.naam ?? "Onbekend"}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {klant?.naam ?? "Persoonlijk"}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatUren(t.uren)}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-muted-foreground">
+                        {t.omschrijving}
+                      </TableCell>
+                      <TableCell className="space-x-1">
+                        {t.gefactureerd ? (
+                          <Badge variant="success">Gefactureerd</Badge>
+                        ) : t.factureerbaar ? (
+                          <Badge variant="soft">Open</Badge>
+                        ) : (
+                          <Badge variant="muted">Niet factureerbaar</Badge>
+                        )}
+                        {t.bron !== "handmatig" ? (
+                          <Badge variant="outline">
+                            {t.bron === "ics_import"
+                              ? "ics"
+                              : t.bron === "tekst_import"
+                              ? "plak"
+                              : "ext"}
+                          </Badge>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setEditing(t)}
+                          aria-label="Bewerken"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <DeleteBtn id={t.id} disabled={t.gefactureerd} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            <div className="flex items-center justify-end gap-4 border-t p-3 text-sm">
+              <span className="text-muted-foreground">{filtered.length} regels</span>
+              <span className="font-medium tabular-nums">
+                Totaal: {formatUren(total)} u
+              </span>
+            </div>
+          </div>
+        </>
       )}
 
       <EditSheet
