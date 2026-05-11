@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "users:list": "tsx scripts/users.ts list",
+    "users:find": "tsx scripts/users.ts find",
+    "users:delete": "tsx scripts/users.ts delete"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

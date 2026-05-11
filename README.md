@@ -110,17 +110,36 @@ Bevat onder andere:
 
 De PDF- en Excel-routes draaien on-demand in een Node-runtime; er is geen Storage bucket nodig.
 
-## Tweede gebruiker (partner)
+## Gebruikersbeheer
 
-1. Open de productie-URL en klik "Aanmaken"
-2. Eigen e-mail en wachtwoord
-3. Klaar; alle data wordt per-user gescoped via key-prefixes
+Aanmaken van accounts is standaard **uitgeschakeld** zodra de omgeving in gebruik is.
+Er zijn drie modi:
 
-Wil je voorkomen dat willekeurige bezoekers signup kunnen doen, zet de allowlist:
+| Status | Wat er gebeurt op `/signup` |
+| --- | --- |
+| Nog geen gebruikers in KV | Bootstrap: het eerste account mag zichzelf aanmaken. |
+| `SIGNUP_ALLOWLIST` env gezet | Alleen e-mailadressen op die lijst mogen aanmaken. |
+| Anders | Signup is dicht. Pagina toont een duidelijke melding. |
+
+Partner uitnodigen:
 
 ```
 SIGNUP_ALLOWLIST=hoofd@example.com,partner@example.com
 ```
+
+Inspecteren wie er in je omgeving zit:
+
+```bash
+pnpm users:list                # alle accounts (e-mail, naam, status, datum, id)
+pnpm users:find jelle          # zoek op e-mail of naam-substring
+pnpm users:delete jelle@x.nl   # account + sessies verwijderen (vraagt bevestiging)
+```
+
+Het script gebruikt dezelfde KV-vars als de app (`.env.local`, of de Vercel
+productie-env als je `vercel env pull` doet). De gerelateerde per-user data
+(`timewriter:user:{uid}:...`) wordt bewust **niet** mee-verwijderd; het account
+zelf is dan al ontoegankelijk, en je houdt een audit trail. Wil je echt
+opruimen, KEYS scan met patroon `timewriter:user:{uid}:*` en del.
 
 ## Belangrijke files
 

@@ -19,14 +19,38 @@ export async function getProject(uid: string, id: string): Promise<Project | nul
   return getKv().get<Project>(KEYS.project(uid, id));
 }
 
+function normaliseerNaam(naam: string): string {
+  return naam.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+async function vindProjectOpNaamBinnenKlant(
+  uid: string,
+  klantId: string | null,
+  naam: string
+): Promise<Project | null> {
+  const target = normaliseerNaam(naam);
+  if (!target) return null;
+  const rows = await listProjecten(uid);
+  return rows.find((p) => p.klant_id === klantId && normaliseerNaam(p.naam) === target) ?? null;
+}
+
 export async function createProject(
   uid: string,
   input: Omit<Project, "id" | "user_id" | "created_at" | "updated_at">
 ): Promise<Project> {
+  if (!input.naam?.trim()) throw new Error("Naam is verplicht.");
+  const conflict = await vindProjectOpNaamBinnenKlant(uid, input.klant_id, input.naam);
+  if (conflict) {
+    throw new Error(
+      input.klant_id
+        ? `Deze klant heeft al een project met de naam "${conflict.naam}".`
+        : `Er bestaat al een persoonlijk project met de naam "${conflict.naam}".`
+    );
+  }
   const kv = getKv();
   const id = randomUUID();
   const now = new Date().toISOString();
-  const project: Project = { ...input, id, user_id: uid, created_at: now, updated_at: now };
+  const project: Project = { ...input, naam: input.naam.trim(), id, user_id: uid, created_at: now, updated_at: now };
   await kv.set(KEYS.project(uid, id), project);
   await kv.sadd(KEYS.projectenIndex(uid), id);
   if (project.klant_id) {
@@ -39,6 +63,20 @@ export async function updateProject(uid: string, id: string, patch: Partial<Proj
   const kv = getKv();
   const existing = await kv.get<Project>(KEYS.project(uid, id));
   if (!existing) throw new Error("Project niet gevonden.");
+  if (patch.naam !== undefined || patch.klant_id !== undefined) {
+    const nieuwKlantId = patch.klant_id !== undefined ? patch.klant_id : existing.klant_id;
+    const nieuweNaam = patch.naam !== undefined ? patch.naam : existing.naam;
+    if (!nieuweNaam.trim()) throw new Error("Naam is verplicht.");
+    const conflict = await vindProjectOpNaamBinnenKlant(uid, nieuwKlantId, nieuweNaam);
+    if (conflict && conflict.id !== id) {
+      throw new Error(
+        nieuwKlantId
+          ? `Deze klant heeft al een project met de naam "${conflict.naam}".`
+          : `Er bestaat al een persoonlijk project met de naam "${conflict.naam}".`
+      );
+    }
+    if (patch.naam !== undefined) patch = { ...patch, naam: nieuweNaam.trim() };
+  }
   const next: Project = {
     ...existing,
     ...patch,

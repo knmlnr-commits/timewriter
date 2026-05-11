@@ -121,6 +121,7 @@ export function ProjectenView({ projecten, klanten }: { projecten: Project[]; kl
       )}
 
       <ProjectSheet
+        key={editing === "new" ? "new" : editing?.id ?? "closed"}
         open={editing !== null}
         onOpenChange={(o) => !o && setEditing(null)}
         project={editing === "new" ? null : editing}

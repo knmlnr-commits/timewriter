@@ -84,6 +84,30 @@ function newToken(): string {
   return randomBytes(32).toString("hex");
 }
 
+export async function isSignupAllowed(email: string): Promise<{ allowed: boolean; reason?: string; bootstrap?: boolean }> {
+  const kv = getKv();
+  if (kv.driver === "absent") return { allowed: false, reason: "KV niet geconfigureerd." };
+
+  const normalized = email.trim().toLowerCase();
+  const allow = process.env.SIGNUP_ALLOWLIST?.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+
+  // Bootstrap: when the system has zero users we always allow the first signup
+  // so the owner can claim the environment. After that, signup is closed unless
+  // an explicit allowlist is configured.
+  const userIds = await kv.smembers(KEYS.usersIndex());
+  if (userIds.length === 0) return { allowed: true, bootstrap: true };
+
+  if (allow && allow.length > 0) {
+    if (allow.includes(normalized)) return { allowed: true };
+    return { allowed: false, reason: "Dit e-mailadres staat niet op de toegestane lijst." };
+  }
+
+  return {
+    allowed: false,
+    reason: "Aanmaken van nieuwe accounts is uitgeschakeld op deze omgeving. Vraag de beheerder om een uitnodiging.",
+  };
+}
+
 export async function signup(opts: {
   email: string;
   password: string;
@@ -97,10 +121,8 @@ export async function signup(opts: {
   const existing = await kv.get<string>(KEYS.userByEmail(email));
   if (existing) throw new Error("Er bestaat al een account met dit e-mailadres.");
 
-  const allow = process.env.SIGNUP_ALLOWLIST?.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  if (allow && allow.length > 0 && !allow.includes(email)) {
-    throw new Error("Dit e-mailadres staat niet op de toegestane lijst.");
-  }
+  const gate = await isSignupAllowed(email);
+  if (!gate.allowed) throw new Error(gate.reason ?? "Aanmaken is niet toegestaan.");
 
   const id = randomUUID();
   const salt = randomBytes(16).toString("hex");

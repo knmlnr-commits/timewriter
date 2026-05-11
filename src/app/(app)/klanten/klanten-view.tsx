@@ -109,6 +109,7 @@ export function KlantenView({ klanten }: { klanten: Klant[] }) {
       )}
 
       <KlantSheet
+        key={editing === "new" ? "new" : editing?.id ?? "closed"}
         open={editing !== null}
         onOpenChange={(o) => !o && setEditing(null)}
         klant={editing === "new" ? null : editing}
@@ -188,7 +189,7 @@ function KlantSheet({
           <SheetTitle>{klant ? "Klant bewerken" : "Nieuwe klant"}</SheetTitle>
           <SheetDescription>Factuurgegevens en standaardtarief</SheetDescription>
         </SheetHeader>
-        <form onSubmit={submit} className="space-y-4">
+        <form key={klant?.id ?? "new"} onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="naam">Naam</Label>
             <Input id="naam" name="naam" defaultValue={klant?.naam ?? ""} required />
