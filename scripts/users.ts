@@ -5,6 +5,8 @@
  *   pnpm tsx scripts/users.ts list
  *   pnpm tsx scripts/users.ts find <email-of-substring>
  *   pnpm tsx scripts/users.ts delete <email>
+ *   pnpm tsx scripts/users.ts admin <email>          # promoveer naar beheerder
+ *   pnpm tsx scripts/users.ts unadmin <email>        # trek beheerderrol in
  *
  * Werkt rechtstreeks tegen je productie-KV (REDIS_URL of
  * KV_REST_API_URL+TOKEN). Leest env in via .env.local of .env.
@@ -39,6 +41,7 @@ loadDotEnv(path.resolve(process.cwd(), ".env"));
 
 type Kv = {
   get<T = unknown>(key: string): Promise<T | null>;
+  set(key: string, value: unknown): Promise<void>;
   del(...keys: string[]): Promise<number>;
   sadd(key: string, ...members: string[]): Promise<number>;
   srem(key: string, ...members: string[]): Promise<number>;
@@ -64,6 +67,10 @@ async function makeKv(): Promise<Kv> {
     return {
       async get(key) {
         return deser(await client.get(key)) as never;
+      },
+      async set(key, value) {
+        const payload = typeof value === "string" ? value : JSON.stringify(value);
+        await client.set(key, payload);
       },
       async del(...keys) {
         if (keys.length === 0) return 0;
@@ -100,6 +107,10 @@ async function makeKv(): Promise<Kv> {
       async get(key) {
         return (await r.get(key)) as never;
       },
+      async set(key, value) {
+        const payload = typeof value === "string" ? value : JSON.stringify(value);
+        await r.set(key, payload);
+      },
       async del(...keys) {
         if (keys.length === 0) return 0;
         return (await r.del(...keys)) as number;
@@ -133,7 +144,7 @@ type User = {
   email: string;
   created_at: string;
   updated_at: string;
-  profile: { naam: string; voltooid: boolean };
+  profile: { naam: string; voltooid: boolean; is_admin?: boolean };
 };
 
 async function listUsers(kv: Kv): Promise<User[]> {
@@ -145,9 +156,11 @@ async function listUsers(kv: Kv): Promise<User[]> {
 
 function fmt(u: User): string {
   const status = u.profile.voltooid ? "voltooid" : "onboarding";
+  const rol = u.profile.is_admin ? "beheerder" : "gebruiker";
   return [
     u.email.padEnd(36),
-    (u.profile.naam || "").padEnd(24),
+    (u.profile.naam || "").padEnd(20),
+    rol.padEnd(10),
     status.padEnd(11),
     u.created_at.slice(0, 10),
     u.id,
@@ -156,11 +169,11 @@ function fmt(u: User): string {
 
 function header() {
   console.log(
-    ["email", "naam", "status", "gemaakt", "id"]
-      .map((h, i) => h.padEnd([36, 24, 11, 10, 36][i]))
+    ["email", "naam", "rol", "status", "gemaakt", "id"]
+      .map((h, i) => h.padEnd([36, 20, 10, 11, 10, 36][i]))
       .join("  ")
   );
-  console.log("-".repeat(120));
+  console.log("-".repeat(130));
 }
 
 async function cmdList(kv: Kv) {
@@ -207,6 +220,31 @@ async function prompt(question: string): Promise<string> {
   });
 }
 
+async function cmdSetAdmin(kv: Kv, email: string, makeAdmin: boolean) {
+  if (!email) {
+    console.error("Geef het e-mailadres.");
+    process.exit(2);
+  }
+  const normalized = email.trim().toLowerCase();
+  const uid = await kv.get<string>(KEYS.userByEmail(normalized));
+  if (!uid) {
+    console.error(`Geen gebruiker met e-mail "${normalized}".`);
+    process.exit(1);
+  }
+  const user = await kv.get<User>(KEYS.user(uid));
+  if (!user) {
+    console.error("Gebruikersrecord niet vindbaar.");
+    process.exit(1);
+  }
+  const next = {
+    ...user,
+    profile: { ...user.profile, is_admin: makeAdmin },
+    updated_at: new Date().toISOString(),
+  };
+  await kv.set(KEYS.user(uid), next);
+  console.log(`${makeAdmin ? "Beheerderrol toegekend aan" : "Beheerderrol ingetrokken bij"} ${normalized}.`);
+}
+
 async function cmdDelete(kv: Kv, email: string) {
   if (!email) {
     console.error("Geef het e-mailadres van het te verwijderen account.");
@@ -249,13 +287,15 @@ async function cmdDelete(kv: Kv, email: string) {
 
 async function main() {
   const [, , subcommand, ...rest] = process.argv;
-  if (!subcommand || !["list", "find", "delete"].includes(subcommand)) {
+  if (!subcommand || !["list", "find", "delete", "admin", "unadmin"].includes(subcommand)) {
     console.log(
       [
         "Gebruik:",
         "  pnpm tsx scripts/users.ts list                  # toon alle accounts",
         "  pnpm tsx scripts/users.ts find <zoekterm>        # zoek op e-mail of naam",
         "  pnpm tsx scripts/users.ts delete <email>         # verwijder account + sessies",
+        "  pnpm tsx scripts/users.ts admin <email>          # promoveer tot beheerder",
+        "  pnpm tsx scripts/users.ts unadmin <email>        # trek beheerderrol in",
       ].join("\n")
     );
     process.exit(subcommand ? 2 : 0);
@@ -271,6 +311,12 @@ async function main() {
         break;
       case "delete":
         await cmdDelete(kv, rest[0] ?? "");
+        break;
+      case "admin":
+        await cmdSetAdmin(kv, rest[0] ?? "", true);
+        break;
+      case "unadmin":
+        await cmdSetAdmin(kv, rest[0] ?? "", false);
         break;
     }
   } finally {

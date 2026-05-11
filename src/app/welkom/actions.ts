@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireUser, updateProfile } from "@/lib/auth";
+import { requireUser, updateProfileSafe } from "@/lib/auth";
 
 const schema = z.object({
   naam: z.string().min(1, "Naam is verplicht."),
@@ -25,7 +25,7 @@ export async function completeOnboardingAction(
     accent_kleur: safeAccent,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer." };
-  await updateProfile(user.id, {
+  await updateProfileSafe(user.id, {
     naam: parsed.data.naam,
     standaard_uurtarief: parsed.data.standaard_uurtarief ?? null,
     accent_kleur: parsed.data.accent_kleur,

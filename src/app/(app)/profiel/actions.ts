@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { changePassword, requireUser, updateProfile } from "@/lib/auth";
+import { changePassword, requireUser, updateProfileSafe } from "@/lib/auth";
 import type { Profile } from "@/lib/auth";
 
 const ACCENT_PALETTE = ["#E8732A", "#2563EB", "#16A34A", "#7C3AED", "#0D9488", "#52525B"];
@@ -57,7 +57,7 @@ export async function saveProfielAction(formData: FormData): Promise<{ ok: boole
     volgend_factuurnummer: parsed.data.volgend_factuurnummer,
     voltooid: true,
   };
-  await updateProfile(user.id, patch);
+  await updateProfileSafe(user.id, patch);
   revalidatePath("/profiel");
   revalidatePath("/", "layout");
   return { ok: true };

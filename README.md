@@ -110,36 +110,40 @@ Bevat onder andere:
 
 De PDF- en Excel-routes draaien on-demand in een Node-runtime; er is geen Storage bucket nodig.
 
-## Gebruikersbeheer
+## Toegangsbeleid
 
-Aanmaken van accounts is standaard **uitgeschakeld** zodra de omgeving in gebruik is.
-Er zijn drie modi:
+Publieke account-aanmaak is **niet** mogelijk. Het beleid is:
 
-| Status | Wat er gebeurt op `/signup` |
+| Situatie | Resultaat |
 | --- | --- |
-| Nog geen gebruikers in KV | Bootstrap: het eerste account mag zichzelf aanmaken. |
-| `SIGNUP_ALLOWLIST` env gezet | Alleen e-mailadressen op die lijst mogen aanmaken. |
-| Anders | Signup is dicht. Pagina toont een duidelijke melding. |
+| Omgeving is leeg (0 gebruikers in KV) | `/signup` is bereikbaar als "Omgeving claimen". Het eerste account wordt automatisch beheerder. |
+| Omgeving is in gebruik | `/signup` geeft 404. Nieuwe accounts kunnen alleen via `/admin` worden aangemaakt door een ingelogde beheerder. |
 
-Partner uitnodigen:
+**Beheerdersscherm (`/admin`)** is alleen zichtbaar voor accounts met `profile.is_admin === true` of e-mailadressen in `ADMIN_EMAILS`. Daar kun je:
+- Nieuwe gebruikers aanmaken (e-mail, naam, tijdelijk wachtwoord, optioneel direct als beheerder)
+- Bestaande accounts zien met rol, status en aanmaakdatum
+- Wachtwoorden resetten (actieve sessies worden direct ingetrokken)
+- Beheerderrollen toekennen of intrekken
+- Accounts verwijderen (eigen account niet)
+
+**Noodingang via env**: e-mailadressen in `ADMIN_EMAILS` worden altijd als beheerder behandeld, ook als hun KV-vlag op `false` staat. Zo kun je jezelf terugzetten als je per ongeluk gedemoteerd bent.
 
 ```
-SIGNUP_ALLOWLIST=hoofd@example.com,partner@example.com
+ADMIN_EMAILS=hoofd@example.com
 ```
 
-Inspecteren wie er in je omgeving zit:
+**CLI voor noodbeheer** (gebruikt dezelfde KV-vars als de app via `.env.local` of `vercel env pull`):
 
 ```bash
-pnpm users:list                # alle accounts (e-mail, naam, status, datum, id)
+pnpm users:list                # alle accounts (e-mail, naam, rol, status, datum, id)
 pnpm users:find jelle          # zoek op e-mail of naam-substring
-pnpm users:delete jelle@x.nl   # account + sessies verwijderen (vraagt bevestiging)
+pnpm users:admin jelle@x.nl    # promoveer tot beheerder
+pnpm users:unadmin jelle@x.nl  # trek beheerderrol in
+pnpm users:delete jelle@x.nl   # account + sessies verwijderen (vraagt JA)
 ```
 
-Het script gebruikt dezelfde KV-vars als de app (`.env.local`, of de Vercel
-productie-env als je `vercel env pull` doet). De gerelateerde per-user data
-(`timewriter:user:{uid}:...`) wordt bewust **niet** mee-verwijderd; het account
-zelf is dan al ontoegankelijk, en je houdt een audit trail. Wil je echt
-opruimen, KEYS scan met patroon `timewriter:user:{uid}:*` en del.
+De gerelateerde per-user data (`timewriter:user:{uid}:...`) wordt bewust **niet**
+mee-verwijderd; het account zelf is dan al ontoegankelijk en je houdt audit trail.
 
 ## Belangrijke files
 

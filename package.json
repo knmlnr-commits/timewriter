@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "users:list": "tsx scripts/users.ts list",
     "users:find": "tsx scripts/users.ts find",
-    "users:delete": "tsx scripts/users.ts delete"
+    "users:delete": "tsx scripts/users.ts delete",
+    "users:admin": "tsx scripts/users.ts admin",
+    "users:unadmin": "tsx scripts/users.ts unadmin"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -11,12 +11,13 @@ import {
   FileText,
   UserCircle,
   Menu,
+  Shield,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-const NAV = [
+const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/uren", label: "Uren", icon: Clock },
   { href: "/klanten", label: "Klanten", icon: Users },
@@ -25,7 +26,10 @@ const NAV = [
   { href: "/profiel", label: "Profiel", icon: UserCircle },
 ] as const;
 
-export function Sidebar({ naam }: { naam: string }) {
+const ADMIN_NAV = { href: "/admin", label: "Beheer", icon: Shield } as const;
+
+export function Sidebar({ naam, isAdmin = false }: { naam: string; isAdmin?: boolean }) {
+  const NAV = isAdmin ? [...BASE_NAV, ADMIN_NAV] : BASE_NAV;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 

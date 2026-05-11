@@ -28,6 +28,7 @@ export type Profile = {
   volgend_factuurnummer: number;
   factuurnummer_prefix: string;
   voltooid: boolean;
+  is_admin: boolean;
 };
 
 export type UserRecord = {
@@ -49,7 +50,7 @@ export type SessionRecord = {
 
 export type SessionUser = Pick<UserRecord, "id" | "email" | "profile">;
 
-function defaultProfile(naam: string): Profile {
+function defaultProfile(naam: string, isAdmin: boolean = false): Profile {
   return {
     naam,
     accent_kleur: "#E8732A",
@@ -65,7 +66,26 @@ function defaultProfile(naam: string): Profile {
     volgend_factuurnummer: 1,
     factuurnummer_prefix: `${new Date().getFullYear()}-`,
     voltooid: false,
+    is_admin: isAdmin,
   };
+}
+
+function adminEmailOverrides(): string[] {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * Een gebruiker is admin als profile.is_admin === true of als hun e-mail in
+ * ADMIN_EMAILS staat. De env-override fungeert als noodingang om jezelf
+ * weer als admin te kunnen aanmerken zonder KV-edit.
+ */
+export function isAdmin(user: { email: string; profile: Pick<Profile, "is_admin"> }): boolean {
+  if (user.profile.is_admin) return true;
+  const overrides = adminEmailOverrides();
+  return overrides.includes(user.email.toLowerCase());
 }
 
 async function hashPassword(password: string, salt: string): Promise<string> {
@@ -84,28 +104,16 @@ function newToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-export async function isSignupAllowed(email: string): Promise<{ allowed: boolean; reason?: string; bootstrap?: boolean }> {
+/**
+ * Publieke signup is alleen toegestaan als bootstrap: er zijn nog geen
+ * gebruikers in KV. Daarna is /signup dicht en moet de beheerder via
+ * /admin nieuwe accounts aanmaken.
+ */
+export async function isBootstrapAvailable(): Promise<boolean> {
   const kv = getKv();
-  if (kv.driver === "absent") return { allowed: false, reason: "KV niet geconfigureerd." };
-
-  const normalized = email.trim().toLowerCase();
-  const allow = process.env.SIGNUP_ALLOWLIST?.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-
-  // Bootstrap: when the system has zero users we always allow the first signup
-  // so the owner can claim the environment. After that, signup is closed unless
-  // an explicit allowlist is configured.
+  if (kv.driver === "absent") return false;
   const userIds = await kv.smembers(KEYS.usersIndex());
-  if (userIds.length === 0) return { allowed: true, bootstrap: true };
-
-  if (allow && allow.length > 0) {
-    if (allow.includes(normalized)) return { allowed: true };
-    return { allowed: false, reason: "Dit e-mailadres staat niet op de toegestane lijst." };
-  }
-
-  return {
-    allowed: false,
-    reason: "Aanmaken van nieuwe accounts is uitgeschakeld op deze omgeving. Vraag de beheerder om een uitnodiging.",
-  };
+  return userIds.length === 0;
 }
 
 export async function signup(opts: {
@@ -121,8 +129,53 @@ export async function signup(opts: {
   const existing = await kv.get<string>(KEYS.userByEmail(email));
   if (existing) throw new Error("Er bestaat al een account met dit e-mailadres.");
 
-  const gate = await isSignupAllowed(email);
-  if (!gate.allowed) throw new Error(gate.reason ?? "Aanmaken is niet toegestaan.");
+  if (!(await isBootstrapAvailable())) {
+    throw new Error("Aanmaken van nieuwe accounts is alleen mogelijk via de beheerder.");
+  }
+
+  // Bootstrap: eerste account is automatisch beheerder en claimt de omgeving.
+  const id = randomUUID();
+  const salt = randomBytes(16).toString("hex");
+  const hash = await hashPassword(opts.password, salt);
+  const now = new Date().toISOString();
+  const user: UserRecord = {
+    id,
+    email,
+    password_salt: salt,
+    password_hash: hash,
+    profile: defaultProfile(opts.naam.trim(), true),
+    created_at: now,
+    updated_at: now,
+  };
+  await kv.set(KEYS.user(id), user);
+  await kv.set(KEYS.userByEmail(email), id);
+  await kv.sadd(KEYS.usersIndex(), id);
+
+  const token = await createSession(id);
+  return { user, token };
+}
+
+/**
+ * Door beheerder uitgevoerde account-aanmaak. Geen sessie wordt aangemaakt;
+ * de nieuwe gebruiker logt zelf in met de meegegeven credentials.
+ */
+export async function adminCreateUser(opts: {
+  email: string;
+  password: string;
+  naam: string;
+  is_admin?: boolean;
+}): Promise<UserRecord> {
+  const kv = getKv();
+  if (kv.driver === "absent") throw new Error("KV niet geconfigureerd.");
+  const email = opts.email.trim().toLowerCase();
+  if (!email || !/^.+@.+\..+$/.test(email)) throw new Error("Ongeldig e-mailadres.");
+  if (!opts.password || opts.password.length < 8) {
+    throw new Error("Wachtwoord moet minimaal 8 tekens zijn.");
+  }
+  if (!opts.naam.trim()) throw new Error("Naam is verplicht.");
+
+  const existing = await kv.get<string>(KEYS.userByEmail(email));
+  if (existing) throw new Error("Er bestaat al een account met dit e-mailadres.");
 
   const id = randomUUID();
   const salt = randomBytes(16).toString("hex");
@@ -133,16 +186,69 @@ export async function signup(opts: {
     email,
     password_salt: salt,
     password_hash: hash,
-    profile: defaultProfile(opts.naam.trim()),
+    profile: defaultProfile(opts.naam.trim(), Boolean(opts.is_admin)),
     created_at: now,
     updated_at: now,
   };
   await kv.set(KEYS.user(id), user);
   await kv.set(KEYS.userByEmail(email), id);
   await kv.sadd(KEYS.usersIndex(), id);
+  return user;
+}
 
-  const token = await createSession(id);
-  return { user, token };
+export async function adminListUsers(): Promise<UserRecord[]> {
+  const kv = getKv();
+  const ids = await kv.smembers(KEYS.usersIndex());
+  if (ids.length === 0) return [];
+  const rows = await kv.mget<UserRecord>(...ids.map((id) => KEYS.user(id)));
+  return rows
+    .filter((u): u is UserRecord => Boolean(u))
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+export async function adminDeleteUser(userId: string): Promise<void> {
+  const kv = getKv();
+  const user = await kv.get<UserRecord>(KEYS.user(userId));
+  if (!user) throw new Error("Gebruiker niet gevonden.");
+  const sessions = await kv.smembers(KEYS.userSessionsIndex(userId));
+  for (const token of sessions) await kv.del(KEYS.session(token));
+  await kv.del(KEYS.userSessionsIndex(userId));
+  await kv.del(KEYS.user(userId));
+  await kv.del(KEYS.userByEmail(user.email));
+  await kv.srem(KEYS.usersIndex(), userId);
+}
+
+export async function adminSetAdmin(userId: string, isAdmin: boolean): Promise<void> {
+  const kv = getKv();
+  const user = await kv.get<UserRecord>(KEYS.user(userId));
+  if (!user) throw new Error("Gebruiker niet gevonden.");
+  const next: UserRecord = {
+    ...user,
+    profile: { ...user.profile, is_admin: isAdmin },
+    updated_at: new Date().toISOString(),
+  };
+  await kv.set(KEYS.user(userId), next);
+}
+
+export async function adminResetPassword(userId: string, newPassword: string): Promise<void> {
+  if (!newPassword || newPassword.length < 8) {
+    throw new Error("Wachtwoord moet minimaal 8 tekens zijn.");
+  }
+  const kv = getKv();
+  const user = await kv.get<UserRecord>(KEYS.user(userId));
+  if (!user) throw new Error("Gebruiker niet gevonden.");
+  const salt = randomBytes(16).toString("hex");
+  const hash = await hashPassword(newPassword, salt);
+  const sessions = await kv.smembers(KEYS.userSessionsIndex(userId));
+  for (const token of sessions) await kv.del(KEYS.session(token));
+  await kv.del(KEYS.userSessionsIndex(userId));
+  const next: UserRecord = {
+    ...user,
+    password_salt: salt,
+    password_hash: hash,
+    updated_at: new Date().toISOString(),
+  };
+  await kv.set(KEYS.user(userId), next);
 }
 
 export async function login(email: string, password: string): Promise<string> {
@@ -190,7 +296,10 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     if (!session) return null;
     const user = await kv.get<UserRecord>(KEYS.user(session.user_id));
     if (!user) return null;
-    return { id: user.id, email: user.email, profile: user.profile };
+    // Defensief: oude records zonder is_admin krijgen `false`, en de
+    // ADMIN_EMAILS env-override wint daarna alsnog via isAdmin().
+    const profile: Profile = { ...user.profile, is_admin: Boolean(user.profile.is_admin) };
+    return { id: user.id, email: user.email, profile };
   } catch {
     return null;
   }
@@ -200,6 +309,22 @@ export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) redirect("/login");
   return user;
+}
+
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!isAdmin(user)) redirect("/dashboard");
+  return user;
+}
+
+/**
+ * Voorkom dat een wijziging via profile-update per ongeluk is_admin
+ * intrekt of toekent: alleen de admin-flows mogen die flag wijzigen.
+ */
+export async function updateProfileSafe(uid: string, patch: Partial<Profile>): Promise<UserRecord> {
+  const { is_admin: _drop, ...veilig } = patch;
+  void _drop;
+  return updateProfile(uid, veilig);
 }
 
 export async function getUserRecord(uid: string): Promise<UserRecord | null> {
