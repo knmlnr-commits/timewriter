@@ -25,6 +25,8 @@ const createSchema = z.object({
   factuurdatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   notities: z.string().default(""),
   include_uren_bijlage: z.boolean().optional().default(false),
+  uw_ordernummer: z.string().optional().default(""),
+  betalingskenmerk: z.string().optional().default(""),
   regels: z.array(regelSchema).min(1),
   tijd_ids: z.array(z.string()),
 });
@@ -69,6 +71,8 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
       status: "concept",
       notities: parsed.data.notities,
       include_uren_bijlage: parsed.data.include_uren_bijlage,
+      uw_ordernummer: parsed.data.uw_ordernummer || undefined,
+      betalingskenmerk: parsed.data.betalingskenmerk || undefined,
       verzonden_op: null,
       betaald_op: null,
     });

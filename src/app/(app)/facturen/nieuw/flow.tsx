@@ -61,6 +61,8 @@ export function NieuweFactuurFlow({
   const [factuurdatum, setFactuurdatum] = useState(format(new Date(), "yyyy-MM-dd"));
   const [groep, setGroep] = useState<Groep>("project");
   const [notities, setNotities] = useState("");
+  const [uwOrdernummer, setUwOrdernummer] = useState("");
+  const [betalingskenmerk, setBetalingskenmerk] = useState("");
   const [includeUrenBijlage, setIncludeUrenBijlage] = useState(true);
   const [regels, setRegels] = useState<Regel[]>([]);
   const [pending, start] = useTransition();
@@ -188,6 +190,8 @@ export function NieuweFactuurFlow({
         periode_eind: tot,
         factuurdatum,
         notities,
+        uw_ordernummer: uwOrdernummer,
+        betalingskenmerk: betalingskenmerk,
         include_uren_bijlage: includeUrenBijlage,
         regels,
         tijd_ids: alleTijdIds,
@@ -357,6 +361,27 @@ export function NieuweFactuurFlow({
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="uw_ordernummer">Uw ordernummer / referentie (optioneel)</Label>
+                <Input
+                  id="uw_ordernummer"
+                  value={uwOrdernummer}
+                  onChange={(e) => setUwOrdernummer(e.target.value)}
+                  placeholder="bv. Consulting Project Maart 2026"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="betalingskenmerk">Betalingskenmerk (optioneel)</Label>
+                <Input
+                  id="betalingskenmerk"
+                  value={betalingskenmerk}
+                  onChange={(e) => setBetalingskenmerk(e.target.value)}
+                  placeholder="bv. FA/260407/0681"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">

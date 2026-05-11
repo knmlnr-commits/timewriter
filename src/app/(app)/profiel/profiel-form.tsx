@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogoUpload } from "@/components/logo-upload";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/auth";
 import { changePasswordAction, saveProfielAction } from "./actions";
@@ -22,6 +23,7 @@ const PALETTE = [
 
 export function ProfielForm({ profile }: { profile: Profile }) {
   const [accent, setAccent] = useState(profile.accent_kleur);
+  const [logoData, setLogoData] = useState(profile.factuur_logo_data ?? "");
   const [pending, startTransition] = useTransition();
   const [pwPending, startPwTransition] = useTransition();
 
@@ -97,9 +99,22 @@ export function ProfielForm({ profile }: { profile: Profile }) {
             <CardTitle>Factuurgegevens</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Logo (verschijnt bovenaan elke factuur)</Label>
+              <LogoUpload value={logoData} onChange={setLogoData} />
+              <input type="hidden" name="factuur_logo_data" value={logoData} />
+            </div>
             <Row>
               <Field id="factuur_naam" label="Bedrijfs- of factuurnaam">
                 <Input id="factuur_naam" name="factuur_naam" defaultValue={profile.factuur_naam} />
+              </Field>
+              <Field id="factuur_website" label="Website (verschijnt onder logo)">
+                <Input id="factuur_website" name="factuur_website" defaultValue={profile.factuur_website} placeholder="www.mijnbedrijf.nl" />
+              </Field>
+            </Row>
+            <Row>
+              <Field id="factuur_telefoon" label="Telefoon (in de footer)">
+                <Input id="factuur_telefoon" name="factuur_telefoon" defaultValue={profile.factuur_telefoon} placeholder="+31 (0)6 ..." />
               </Field>
               <Field id="iban" label="IBAN">
                 <Input id="iban" name="iban" defaultValue={profile.iban} />

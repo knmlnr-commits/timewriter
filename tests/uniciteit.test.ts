@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { installKvMock } from "./setup-kv-mock";
 
 const baseKlant = {
+  factuur_taa: "",
   factuur_email: "",
   factuur_adres: "",
   factuur_postcode: "",
   factuur_plaats: "",
+  debiteurnummer: "",
   standaard_uurtarief: null as number | null,
   btw_percentage: 21,
   betaaltermijn_dagen: 30,

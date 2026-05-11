@@ -7,6 +7,7 @@ import type { Profile } from "@/lib/auth";
 
 const ACCENT_PALETTE = ["#E8732A", "#2563EB", "#16A34A", "#7C3AED", "#0D9488", "#52525B"];
 
+const MAX_LOGO_BYTES = 200 * 1024; // ~150KB original; allow some headroom encoded
 const schema = z.object({
   naam: z.string().min(1),
   accent_kleur: z.string(),
@@ -19,6 +20,16 @@ const schema = z.object({
   btw_nummer: z.string().default(""),
   iban: z.string().default(""),
   factuur_voettekst: z.string().default(""),
+  factuur_website: z.string().default(""),
+  factuur_telefoon: z.string().default(""),
+  factuur_logo_data: z
+    .string()
+    .max(MAX_LOGO_BYTES, "Logo te groot. Verklein eerst.")
+    .refine(
+      (v) => v === "" || v.startsWith("data:image/"),
+      "Logo moet een data URL zijn (PNG, JPG of SVG)."
+    )
+    .default(""),
   factuurnummer_prefix: z.string().default(""),
   volgend_factuurnummer: z.coerce.number().int().positive().default(1),
 });
@@ -37,6 +48,9 @@ export async function saveProfielAction(formData: FormData): Promise<{ ok: boole
     btw_nummer: formData.get("btw_nummer") ?? "",
     iban: formData.get("iban") ?? "",
     factuur_voettekst: formData.get("factuur_voettekst") ?? "",
+    factuur_website: formData.get("factuur_website") ?? "",
+    factuur_telefoon: formData.get("factuur_telefoon") ?? "",
+    factuur_logo_data: formData.get("factuur_logo_data") ?? "",
     factuurnummer_prefix: formData.get("factuurnummer_prefix") ?? "",
     volgend_factuurnummer: formData.get("volgend_factuurnummer") || 1,
   });
@@ -53,6 +67,9 @@ export async function saveProfielAction(formData: FormData): Promise<{ ok: boole
     btw_nummer: parsed.data.btw_nummer,
     iban: parsed.data.iban,
     factuur_voettekst: parsed.data.factuur_voettekst,
+    factuur_website: parsed.data.factuur_website,
+    factuur_telefoon: parsed.data.factuur_telefoon,
+    factuur_logo_data: parsed.data.factuur_logo_data,
     factuurnummer_prefix: parsed.data.factuurnummer_prefix,
     volgend_factuurnummer: parsed.data.volgend_factuurnummer,
     voltooid: true,

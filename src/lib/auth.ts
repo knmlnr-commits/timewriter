@@ -25,6 +25,10 @@ export type Profile = {
   btw_nummer: string;
   iban: string;
   factuur_voettekst: string;
+  factuur_website: string;
+  factuur_telefoon: string;
+  /** Logo voor op de factuur. Base64 data URL (PNG/JPG/SVG), max ~150KB encoded. Leeg = geen logo. */
+  factuur_logo_data: string;
   volgend_factuurnummer: number;
   factuurnummer_prefix: string;
   voltooid: boolean;
@@ -63,6 +67,9 @@ function defaultProfile(naam: string, isAdmin: boolean = false): Profile {
     btw_nummer: "",
     iban: "",
     factuur_voettekst: "",
+    factuur_website: "",
+    factuur_telefoon: "",
+    factuur_logo_data: "",
     volgend_factuurnummer: 1,
     factuurnummer_prefix: `${new Date().getFullYear()}-`,
     voltooid: false,

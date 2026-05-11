@@ -240,6 +240,16 @@ function KlantSheet({
             <Label htmlFor="naam">Naam</Label>
             <Input id="naam" name="naam" defaultValue={klant?.naam ?? ""} required />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="factuur_taa">t.a.v. (optioneel)</Label>
+              <Input id="factuur_taa" name="factuur_taa" defaultValue={klant?.factuur_taa ?? ""} placeholder="Contactpersoon" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="debiteurnummer">Debiteurnr (optioneel)</Label>
+              <Input id="debiteurnummer" name="debiteurnummer" defaultValue={klant?.debiteurnummer ?? ""} placeholder="100380" />
+            </div>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="factuur_email">Factuur-e-mail</Label>
             <Input id="factuur_email" name="factuur_email" type="email" defaultValue={klant?.factuur_email ?? ""} />

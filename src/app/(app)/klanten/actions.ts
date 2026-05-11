@@ -7,10 +7,12 @@ import { createKlant, deleteKlant, updateKlant } from "@/lib/repo/klanten";
 
 const schema = z.object({
   naam: z.string().min(1, "Naam is verplicht."),
+  factuur_taa: z.string().default(""),
   factuur_email: z.string().email().or(z.literal("")).default(""),
   factuur_adres: z.string().default(""),
   factuur_postcode: z.string().default(""),
   factuur_plaats: z.string().default(""),
+  debiteurnummer: z.string().default(""),
   standaard_uurtarief: z.coerce.number().nonnegative().nullable().optional(),
   btw_percentage: z.coerce.number().min(0).max(100).default(21),
   betaaltermijn_dagen: z.coerce.number().int().min(0).max(365).default(30),
@@ -21,10 +23,12 @@ const schema = z.object({
 function fromFormData(formData: FormData) {
   return {
     naam: formData.get("naam"),
+    factuur_taa: formData.get("factuur_taa") ?? "",
     factuur_email: formData.get("factuur_email") ?? "",
     factuur_adres: formData.get("factuur_adres") ?? "",
     factuur_postcode: formData.get("factuur_postcode") ?? "",
     factuur_plaats: formData.get("factuur_plaats") ?? "",
+    debiteurnummer: formData.get("debiteurnummer") ?? "",
     standaard_uurtarief: formData.get("standaard_uurtarief") || null,
     btw_percentage: formData.get("btw_percentage") || 21,
     betaaltermijn_dagen: formData.get("betaaltermijn_dagen") || 30,

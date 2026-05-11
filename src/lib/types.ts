@@ -4,10 +4,14 @@ export type Klant = {
   id: ID;
   user_id: ID;
   naam: string;
+  /** t.a.v. naam — contactpersoon binnen de klant-organisatie. Optioneel, kan leeg zijn. */
+  factuur_taa: string;
   factuur_email: string;
   factuur_adres: string;
   factuur_postcode: string;
   factuur_plaats: string;
+  /** Debiteurnummer dat de klant aan jou heeft toegekend. Optioneel. */
+  debiteurnummer: string;
   standaard_uurtarief: number | null;
   btw_percentage: number;
   betaaltermijn_dagen: number;
@@ -81,6 +85,10 @@ export type Factuur = {
    * transparantie waar de gefactureerde uren aan besteed zijn.
    */
   include_uren_bijlage?: boolean;
+  /** "Uw ordernummer" / PO-referentie van de klant. Optioneel. */
+  uw_ordernummer?: string;
+  /** Betalingskenmerk dat de klant moet vermelden bij overboeking. Optioneel. */
+  betalingskenmerk?: string;
   verzonden_op: string | null;
   betaald_op: string | null;
   created_at: string;
