@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FactuurActions } from "./actions-ui";
+import { FactuurActions, UrenBijlageToggle } from "./actions-ui";
 
 const STATUS_VARIANT = {
   concept: "muted",
@@ -83,6 +83,11 @@ export default async function FactuurPage({ params }: { params: Promise<{ id: st
         </Button>
         <FactuurActions id={factuur.id} status={factuur.status} />
       </div>
+
+      <UrenBijlageToggle
+        id={factuur.id}
+        initialEnabled={Boolean(factuur.include_uren_bijlage)}
+      />
 
       <Card>
         <CardHeader>

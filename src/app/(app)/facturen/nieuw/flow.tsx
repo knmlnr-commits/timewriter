@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +61,7 @@ export function NieuweFactuurFlow({
   const [factuurdatum, setFactuurdatum] = useState(format(new Date(), "yyyy-MM-dd"));
   const [groep, setGroep] = useState<Groep>("project");
   const [notities, setNotities] = useState("");
+  const [includeUrenBijlage, setIncludeUrenBijlage] = useState(true);
   const [regels, setRegels] = useState<Regel[]>([]);
   const [pending, start] = useTransition();
   const [generated, setGenerated] = useState(false);
@@ -186,6 +188,7 @@ export function NieuweFactuurFlow({
         periode_eind: tot,
         factuurdatum,
         notities,
+        include_uren_bijlage: includeUrenBijlage,
         regels,
         tijd_ids: alleTijdIds,
       });
@@ -360,6 +363,22 @@ export function NieuweFactuurFlow({
               <Label htmlFor="notities">Notities op de factuur (optioneel)</Label>
               <Textarea id="notities" rows={2} value={notities} onChange={(e) => setNotities(e.target.value)} />
             </div>
+
+            <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+              <Checkbox
+                checked={includeUrenBijlage}
+                onCheckedChange={(v) => setIncludeUrenBijlage(Boolean(v))}
+                className="mt-0.5"
+              />
+              <div className="text-sm">
+                <span className="font-medium">Bijlage met urendetail</span>
+                <p className="text-xs text-muted-foreground">
+                  Voegt een extra pagina (PDF) en sheet (Excel) toe met alle
+                  onderliggende tijdsregistraties — datum, project, omschrijving en
+                  uren. Geeft de klant transparantie over waar de tijd in zit.
+                </p>
+              </div>
+            </label>
 
             <div className="grid grid-cols-2 gap-1 text-sm md:max-w-sm md:ml-auto">
               <span className="text-muted-foreground">Subtotaal</span>

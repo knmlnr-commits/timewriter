@@ -1,7 +1,7 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
-import type { Factuur, Klant } from "@/lib/types";
+import type { Factuur, Klant, Project, Tijdsregistratie } from "@/lib/types";
 import type { Profile } from "@/lib/auth";
 import { money, numFixed, nullableNumber } from "@/lib/format";
 
@@ -41,13 +41,17 @@ export function InvoiceDocument({
   klant,
   profile,
   accentKleur,
+  bijlage,
 }: {
   factuur: Factuur;
   klant: Klant;
   profile: Profile;
   accentKleur: string;
+  /** Wanneer aanwezig en factuur.include_uren_bijlage true is, wordt een extra pagina met uren-detail toegevoegd. */
+  bijlage?: { tijden: Tijdsregistratie[]; projecten: Project[] };
 }) {
   const brandStyle = { color: accentKleur };
+  const showBijlage = Boolean(factuur.include_uren_bijlage && bijlage && bijlage.tijden.length > 0);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -145,6 +149,123 @@ export function InvoiceDocument({
           </Text>
         ) : null}
       </Page>
+
+      {showBijlage && bijlage ? (
+        <BijlagePage
+          tijden={bijlage.tijden}
+          projecten={bijlage.projecten}
+          factuur={factuur}
+          klant={klant}
+          accentKleur={accentKleur}
+        />
+      ) : null}
     </Document>
+  );
+}
+
+const bijlageStyles = StyleSheet.create({
+  intro: { fontSize: 9, color: "#52525B", marginBottom: 14 },
+  table: { marginTop: 4 },
+  row: { flexDirection: "row", borderBottomColor: "#E4E4E7", borderBottomWidth: 1, paddingVertical: 5 },
+  header: { borderBottomColor: "#18181b", borderBottomWidth: 1 },
+  th: { fontWeight: 700, fontSize: 9, color: "#27272a", textTransform: "uppercase", letterSpacing: 0.5 },
+  td: { fontSize: 9 },
+  colDate: { width: 70 },
+  colProject: { flex: 2 },
+  colOmschr: { flex: 3 },
+  colUren: { width: 50, textAlign: "right" },
+  totals: { flexDirection: "row", marginTop: 10, justifyContent: "flex-end" },
+  totalCell: { fontSize: 10, fontWeight: 700 },
+});
+
+function BijlagePage({
+  tijden,
+  projecten,
+  factuur,
+  klant,
+  accentKleur,
+}: {
+  tijden: Tijdsregistratie[];
+  projecten: Project[];
+  factuur: Factuur;
+  klant: Klant;
+  accentKleur: string;
+}) {
+  const brandStyle = { color: accentKleur };
+  const projectById = new Map(projecten.map((p) => [p.id, p]));
+
+  // Sorteer chronologisch en groepeer per dag voor leesbaarheid
+  const sorted = [...tijden].sort((a, b) =>
+    a.datum < b.datum ? -1 : a.datum > b.datum ? 1 : a.created_at.localeCompare(b.created_at)
+  );
+
+  const totaalUren = sorted.reduce((s, t) => s + (Number(t.uren) || 0), 0);
+
+  return (
+    <Page size="A4" style={styles.page}>
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.brand, brandStyle]}>Urendetail</Text>
+          <Text style={styles.small}>Bijlage bij factuur {factuur.factuurnummer}</Text>
+          <Text style={styles.small}>{klant.naam}</Text>
+        </View>
+        <View style={styles.meta}>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Periode</Text>
+            <Text>
+              {fmtPdfDate(factuur.periode_start, "d MMM")} -{" "}
+              {fmtPdfDate(factuur.periode_eind, "d MMM yyyy")}
+            </Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Regels</Text>
+            <Text>{sorted.length}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Totaal</Text>
+            <Text>{totaalUren.toFixed(2)} u</Text>
+          </View>
+        </View>
+      </View>
+
+      <Text style={bijlageStyles.intro}>
+        Overzicht van alle tijdsregistraties die bij deze factuur horen.
+        Sorteren is op datum; volgorde binnen een dag is op moment van invoer.
+      </Text>
+
+      <View style={bijlageStyles.table}>
+        <View style={[bijlageStyles.row, bijlageStyles.header]}>
+          <Text style={[bijlageStyles.th, bijlageStyles.colDate]}>Datum</Text>
+          <Text style={[bijlageStyles.th, bijlageStyles.colProject]}>Project</Text>
+          <Text style={[bijlageStyles.th, bijlageStyles.colOmschr]}>Omschrijving</Text>
+          <Text style={[bijlageStyles.th, bijlageStyles.colUren]}>Uren</Text>
+        </View>
+        {sorted.map((t) => {
+          const project = projectById.get(t.project_id);
+          return (
+            <View key={t.id} style={bijlageStyles.row} wrap={false}>
+              <Text style={[bijlageStyles.td, bijlageStyles.colDate]}>
+                {fmtPdfDate(t.datum, "d MMM yyyy")}
+              </Text>
+              <Text style={[bijlageStyles.td, bijlageStyles.colProject]}>
+                {project?.naam ?? "—"}
+              </Text>
+              <Text style={[bijlageStyles.td, bijlageStyles.colOmschr]}>
+                {t.omschrijving || "—"}
+              </Text>
+              <Text style={[bijlageStyles.td, bijlageStyles.colUren]}>
+                {numFixed(t.uren)}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={bijlageStyles.totals}>
+        <Text style={[bijlageStyles.totalCell, brandStyle]}>
+          Totaal: {totaalUren.toFixed(2)} uur
+        </Text>
+      </View>
+    </Page>
   );
 }

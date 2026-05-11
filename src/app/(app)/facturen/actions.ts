@@ -5,7 +5,7 @@ import { addDays, format } from "date-fns";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { getKlant } from "@/lib/repo/klanten";
-import { createFactuur, deleteFactuur, getFactuur, round2, updateFactuurRegels, updateFactuurStatus } from "@/lib/repo/facturen";
+import { createFactuur, deleteFactuur, getFactuur, round2, setIncludeUrenBijlage, updateFactuurRegels, updateFactuurStatus } from "@/lib/repo/facturen";
 import { markeerGefactureerd, ontkoppelFactuur } from "@/lib/repo/tijden";
 import { redirect } from "next/navigation";
 import type { FactuurRegel, FactuurStatus } from "@/lib/types";
@@ -24,6 +24,7 @@ const createSchema = z.object({
   periode_eind: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   factuurdatum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   notities: z.string().default(""),
+  include_uren_bijlage: z.boolean().optional().default(false),
   regels: z.array(regelSchema).min(1),
   tijd_ids: z.array(z.string()),
 });
@@ -67,6 +68,7 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
       totaal_incl_btw,
       status: "concept",
       notities: parsed.data.notities,
+      include_uren_bijlage: parsed.data.include_uren_bijlage,
       verzonden_op: null,
       betaald_op: null,
     });
@@ -93,6 +95,18 @@ export async function updateFactuurRegelsAction(id: string, regels: FactuurRegel
   const user = await requireUser();
   await updateFactuurRegels(user.id, id, regels);
   revalidatePath(`/facturen/${id}`);
+}
+
+export async function toggleUrenBijlageAction(id: string, include: boolean): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  try {
+    await setIncludeUrenBijlage(user.id, id, include);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Onbekende fout." };
+  }
+  revalidatePath("/facturen");
+  revalidatePath(`/facturen/${id}`);
+  return { ok: true };
 }
 
 export async function deleteFactuurAction(id: string): Promise<{ ok: boolean; error?: string }> {

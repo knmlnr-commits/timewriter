@@ -67,6 +67,23 @@ export async function createFactuur(
   return factuur;
 }
 
+export async function setIncludeUrenBijlage(
+  uid: string,
+  id: string,
+  include: boolean
+): Promise<Factuur> {
+  const kv = getKv();
+  const existing = await kv.get<Factuur>(KEYS.factuur(uid, id));
+  if (!existing) throw new Error("Factuur niet gevonden.");
+  const next: Factuur = {
+    ...existing,
+    include_uren_bijlage: include,
+    updated_at: new Date().toISOString(),
+  };
+  await kv.set(KEYS.factuur(uid, id), next);
+  return next;
+}
+
 export async function updateFactuurStatus(
   uid: string,
   id: string,

@@ -75,6 +75,12 @@ export type Factuur = {
   totaal_incl_btw: number;
   status: FactuurStatus;
   notities: string;
+  /**
+   * Wanneer true: extra pagina (PDF) en sheet (xlsx) met alle onderliggende
+   * tijdsregistraties uit regel.tijd_ids. Geeft de klant volledige
+   * transparantie waar de gefactureerde uren aan besteed zijn.
+   */
+  include_uren_bijlage?: boolean;
   verzonden_op: string | null;
   betaald_op: string | null;
   created_at: string;
