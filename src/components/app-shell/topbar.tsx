@@ -31,9 +31,10 @@ export function Topbar({ email, version }: { email: string; version: string }) {
         <Button
           onClick={() => open()}
           size="sm"
-          className="hidden sm:inline-flex gap-2"
+          aria-label="Snelle invoer"
+          className="gap-2 h-10 w-10 sm:h-9 sm:w-auto sm:px-4"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
           <span className="hidden sm:inline">Snelle invoer</span>
           <span className="hidden md:inline text-[10px] opacity-70">⌘N</span>
         </Button>
