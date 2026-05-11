@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { isAdmin, requireUser } from "@/lib/auth";
+import { APP_VERSION } from "@/lib/version";
 import { Sidebar } from "@/components/app-shell/sidebar";
 import { Topbar } from "@/components/app-shell/topbar";
 import { SnelInvoerProvider } from "@/components/snel-invoer/snel-invoer-context";
@@ -29,7 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex min-h-screen flex-col md:flex-row">
         <Sidebar naam={user.profile.naam} isAdmin={isAdmin(user)} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar email={user.email} />
+          <Topbar email={user.email} version={APP_VERSION} />
           <main className="flex-1 p-4 md:p-6">{children}</main>
         </div>
       </div>
