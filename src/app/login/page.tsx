@@ -62,13 +62,16 @@ export default async function LoginPage() {
         <div className="relative space-y-8 max-w-xl">
           <div className="space-y-3">
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-              Urenregistratie?{" "}
-              <span className="text-[var(--brand)]">Praat erover</span>.
+              Urenadmin?{" "}
+              <span className="text-[var(--brand)]">Doen wij wel</span>.
             </h1>
             <p className="text-lg text-muted-foreground max-w-md">
-              De eerste uren-tool waar je gewoon kunt zeggen
-              <span className="italic"> &ldquo;maandag standaard, dinsdag was ik vrij, woensdag 6 uur Project X&rdquo;</span>{" "}
-              en de AI doet de rest. Voor freelancers en interim&middot;professionals die liever werken dan administreren.
+              Praat met onze AI, factuur is klaar. Jij gaat door met het echte
+              werk. Voorbeeld:{" "}
+              <span className="italic">
+                &ldquo;maandag standaard, dinsdag vrij, woensdag 6 uur Project X&rdquo;
+              </span>{" "}
+              — onze bot vult de rest in en jij bevestigt met één tap.
             </p>
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -87,7 +90,7 @@ export default async function LoginPage() {
         </div>
 
         <div className="relative text-xs text-muted-foreground">
-          time-app.nl &middot; tijdregistratie waar je tegen kan praten
+          time-app.nl &middot; de admin doen wij, jij hoeft alleen te vertellen
         </div>
       </section>
 
