@@ -190,6 +190,43 @@ uren) worden automatisch overgeslagen, dus opnieuw plakken is veilig.
 **.ics-bestand** &mdash; voor wie een Outlook/Apple kalender-export wil
 gebruiken. Zie de eerdere documentatie.
 
+## Reminders (web push)
+
+Per patroon kun je een reminder activeren onder `/uren/patroon`: kies tijd
+(bv. vrijdag 21:00) en op die tijd valt er een push-melding op apparaten
+waar de gebruiker notificaties heeft aangezet. Tap op de melding opent
+`/uren/bevestig` met "Ja, boek X u" / "Anders aantal" / "Niet gebeurd".
+
+Setup (eenmalig):
+
+1. **Genereer VAPID keys** op je laptop:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+2. **Zet 4 env vars op Vercel** (Settings → Environment Variables):
+   - `VAPID_PUBLIC_KEY` (public key uit stap 1)
+   - `VAPID_PRIVATE_KEY` (private key uit stap 1)
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (dezelfde public key — client heeft 'm nodig)
+   - `VAPID_SUBJECT` (mailto: of https: — voor abuse-rapportage)
+   - `CRON_SECRET` (random hex, bv. `openssl rand -hex 32`)
+3. **Redeploy** zodat alles is gepicked up.
+4. **Cron** staat al klaar via `vercel.json` (`/api/cron/reminders` elk
+   kwartier). Vercel injecteert automatisch `Authorization: Bearer
+   <CRON_SECRET>`; de endpoint weigert calls zonder die header.
+5. **Per apparaat activeren**: gebruiker opent `/profiel`, scrollt naar
+   "Notificaties op dit apparaat", klikt **Activeren**. Browser vraagt
+   toestemming. Vanaf dat moment ontvangt dit apparaat de reminders.
+
+**iOS-bijzonderheid**: Apple staat web push alleen toe als de site als
+PWA op het beginscherm staat (Safari → deel → "Voeg toe aan beginscherm").
+Het profielscherm detecteert dit en toont een banner met de stappen.
+
+De cron-endpoint scant per kwartier alle gebruikers, vindt patronen
+waarvan `reminder_time` binnen de laatste 15 minuten viel, slaat patronen
+over waarvoor vandaag al uren zijn geboekt op het project, en stuurt
+encrypted push payloads via Apple/Google. Dedup met TTL 26h zorgt dat
+dezelfde reminder niet dubbel afgevuurd wordt.
+
 ## Mobiel (PWA)
 
 De webapp is geconfigureerd als Progressive Web App, zodat je 'm op je

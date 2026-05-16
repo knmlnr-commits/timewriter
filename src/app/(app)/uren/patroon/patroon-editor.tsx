@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Bell, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,8 @@ export function PatroonEditor({
         hours: 8,
         project_id: projecten[0]?.id ?? "",
         omschrijving: "",
+        reminder_enabled: false,
+        reminder_time: "",
       },
     ]);
   }
@@ -171,6 +174,40 @@ export function PatroonEditor({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+
+                    {/* Reminder rij — full width onder de hoofdregel */}
+                    <div className="col-span-3 flex flex-wrap items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-xs">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Checkbox
+                          checked={Boolean(row.reminder_enabled)}
+                          onCheckedChange={(v) =>
+                            updateRow(row._key, {
+                              reminder_enabled: Boolean(v),
+                              reminder_time:
+                                row.reminder_time || (Boolean(v) ? "17:00" : ""),
+                            })
+                          }
+                        />
+                        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Reminder</span>
+                      </label>
+                      {row.reminder_enabled ? (
+                        <>
+                          <span className="text-muted-foreground">om</span>
+                          <Input
+                            type="time"
+                            value={row.reminder_time ?? ""}
+                            onChange={(e) =>
+                              updateRow(row._key, { reminder_time: e.target.value })
+                            }
+                            className="h-7 w-24 text-xs"
+                          />
+                          <span className="text-muted-foreground">
+                            (push naar al je apparaten met notificaties aan)
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
                   </div>
                 ))
               )}

@@ -65,3 +65,59 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
+
+/* ─── Web push reminders ─────────────────────────────────────────────────── */
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "TijdRegistratie",
+    body: "Je hebt een nieuwe melding.",
+    url: "/uren",
+  };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      payload = { ...payload, ...parsed };
+    }
+  } catch (e) {
+    // payload was geen JSON; gebruik defaults
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icon.svg",
+      badge: "/icon.svg",
+      tag: payload.tag || undefined,
+      data: { url: payload.url },
+      vibrate: [120, 60, 120],
+      requireInteraction: false,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/uren";
+
+  event.waitUntil(
+    (async () => {
+      const clientsList = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      // Focus een bestaand venster dat al op de juiste origin staat, en stuur 'm naar de target.
+      for (const c of clientsList) {
+        if (c.url.startsWith(self.location.origin)) {
+          await c.focus();
+          if ("navigate" in c) {
+            try {
+              return await c.navigate(targetUrl);
+            } catch (e) {
+              // sommige browsers staan navigate niet toe; openen we dan een nieuw venster
+            }
+          }
+          return;
+        }
+      }
+      await self.clients.openWindow(targetUrl);
+    })()
+  );
+});

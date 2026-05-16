@@ -50,4 +50,12 @@ export const KEYS = {
 
   // default werkweek (chat-assistent gebruikt dit als startpunt)
   defaultWeek: (uid: string) => `${NAMESPACE}:user:${uid}:default-week`,
+
+  // web push subscriptions (per-device)
+  pushSubsIndex: (uid: string) => `${NAMESPACE}:user:${uid}:push-subs`,
+  pushSub: (uid: string, subId: string) => `${NAMESPACE}:user:${uid}:push-sub:${subId}`,
+
+  // reminder de-dup zodat de cron 'm niet twee keer afvuurt op dezelfde dag
+  reminderFired: (uid: string, patternId: string, dateIso: string) =>
+    `${NAMESPACE}:user:${uid}:reminder-fired:${dateIso}:${patternId}`,
 } as const;

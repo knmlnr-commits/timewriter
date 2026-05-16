@@ -12,6 +12,12 @@ const patternSchema = z.object({
   hours: z.coerce.number().positive().max(24),
   project_id: z.string().min(1),
   omschrijving: z.string().default(""),
+  reminder_enabled: z.boolean().optional(),
+  reminder_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Gebruik HH:mm")
+    .optional()
+    .or(z.literal("")),
 });
 
 export async function savePatroonAction(
@@ -28,6 +34,8 @@ export async function savePatroonAction(
     hours: p.hours,
     project_id: p.project_id,
     omschrijving: p.omschrijving,
+    reminder_enabled: Boolean(p.reminder_enabled && p.reminder_time),
+    reminder_time: p.reminder_time || undefined,
   }));
   try {
     await setDefaultWeek(user.id, sanitized);

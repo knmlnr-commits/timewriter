@@ -123,4 +123,20 @@ export type WeeklyPattern = {
   hours: number;
   project_id: ID;
   omschrijving: string;
+  /** Wanneer aan: web-push reminder op deze tijd (HH:mm) op de betreffende dag. */
+  reminder_enabled?: boolean;
+  reminder_time?: string;
+};
+
+export type PushSubscriptionRecord = {
+  id: ID;
+  user_id: ID;
+  endpoint: string;
+  /** ECDH public key voor encryptie van de push payload (base64-url) */
+  p256dh: string;
+  /** Auth secret voor encryptie (base64-url) */
+  auth: string;
+  /** Optionele user-agent string voor identificatie van het apparaat. */
+  user_agent: string;
+  created_at: string;
 };
