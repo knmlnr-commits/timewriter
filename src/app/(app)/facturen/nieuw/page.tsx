@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { listKlanten } from "@/lib/repo/klanten";
 import { listProjecten } from "@/lib/repo/projecten";
 import { listTijden } from "@/lib/repo/tijden";
+import { listBonnetjes } from "@/lib/repo/bonnetjes";
 import { Button } from "@/components/ui/button";
 import { NieuweFactuurFlow } from "./flow";
 
@@ -22,10 +23,12 @@ export default async function NieuweFactuurPage({
   const tot = sp.tot ?? format(endOfMonth(vorigeMaand), "yyyy-MM-dd");
   const klantId = sp.klant ?? null;
 
-  const [klanten, projecten, tijden] = await Promise.all([
+  const [klanten, projecten, tijden, bonnetjes] = await Promise.all([
     listKlanten(user.id),
     listProjecten(user.id),
     listTijden(user.id, { from: van, to: tot }),
+    // Alle doorbelaste open bonnetjes uit deze periode — gefilterd per klant in de flow zelf
+    listBonnetjes(user.id, { from: van, to: tot }),
   ]);
 
   return (
@@ -41,6 +44,7 @@ export default async function NieuweFactuurPage({
         klanten={klanten.filter((k) => !k.archief)}
         projecten={projecten}
         tijden={tijden}
+        bonnetjes={bonnetjes.filter((b) => b.doorbelast && !b.factuur_id && b.klant_id)}
         initialKlant={klantId}
         initialVan={van}
         initialTot={tot}

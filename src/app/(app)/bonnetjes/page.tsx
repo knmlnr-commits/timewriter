@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { nl } from "date-fns/locale";
-import { Camera, Plus, Receipt } from "lucide-react";
+import { Camera, Download, Plus, Receipt } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { listBonnetjes } from "@/lib/repo/bonnetjes";
 import { listKlanten } from "@/lib/repo/klanten";
@@ -57,12 +56,22 @@ export default async function BonnetjesPage({
             Fotografeer een bon, AI vult de rest in.
           </p>
         </div>
-        <Button asChild className="gap-2">
-          <Link href="/bonnetjes/nieuw" aria-label="Nieuw bonnetje">
-            <Camera className="h-4 w-4" />
-            <span className="hidden sm:inline">Nieuw bonnetje</span>
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          {bonnetjes.length > 0 ? (
+            <Button asChild variant="outline" className="gap-2" aria-label="Exporteer CSV">
+              <a href={`/api/bonnetjes/export?van=${from}&tot=${to}`} download>
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">CSV-export</span>
+              </a>
+            </Button>
+          ) : null}
+          <Button asChild className="gap-2">
+            <Link href="/bonnetjes/nieuw" aria-label="Nieuw bonnetje">
+              <Camera className="h-4 w-4" />
+              <span className="hidden sm:inline">Nieuw bonnetje</span>
+            </Link>
+          </Button>
+        </div>
       </header>
 
       {bonnetjes.length === 0 ? (

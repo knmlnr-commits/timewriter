@@ -20,7 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Klant, Project, Tijdsregistratie } from "@/lib/types";
+import { money } from "@/lib/format";
+import {
+  BONNETJE_CATEGORIE_LABEL,
+  type Bonnetje,
+  type Klant,
+  type Project,
+  type Tijdsregistratie,
+} from "@/lib/types";
 import { generateFactuurAction } from "../actions";
 
 type Groep = "project" | "dag" | "plat";
@@ -41,6 +48,7 @@ export function NieuweFactuurFlow({
   klanten,
   projecten,
   tijden,
+  bonnetjes,
   initialKlant,
   initialVan,
   initialTot,
@@ -49,6 +57,7 @@ export function NieuweFactuurFlow({
   klanten: Klant[];
   projecten: Project[];
   tijden: Tijdsregistratie[];
+  bonnetjes: Bonnetje[];
   initialKlant: string | null;
   initialVan: string;
   initialTot: string;
@@ -65,10 +74,33 @@ export function NieuweFactuurFlow({
   const [betalingskenmerk, setBetalingskenmerk] = useState("");
   const [includeUrenBijlage, setIncludeUrenBijlage] = useState(true);
   const [regels, setRegels] = useState<Regel[]>([]);
+  const [bonnetjeIds, setBonnetjeIds] = useState<Set<string>>(new Set());
   const [pending, start] = useTransition();
   const [generated, setGenerated] = useState(false);
 
   const klant = klanten.find((k) => k.id === klantId);
+
+  const klantBonnetjes = useMemo(
+    () => (klantId ? bonnetjes.filter((b) => b.klant_id === klantId) : []),
+    [bonnetjes, klantId]
+  );
+  const selectedBonnetjes = useMemo(
+    () => klantBonnetjes.filter((b) => bonnetjeIds.has(b.id)),
+    [klantBonnetjes, bonnetjeIds]
+  );
+
+  function toggleBonnetje(id: string) {
+    setBonnetjeIds((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+  function toggleAllBonnetjes() {
+    if (bonnetjeIds.size === klantBonnetjes.length) setBonnetjeIds(new Set());
+    else setBonnetjeIds(new Set(klantBonnetjes.map((b) => b.id)));
+  }
 
   function refreshPeriod(field: "van" | "tot", value: string) {
     if (field === "van") setVan(value);
@@ -175,7 +207,8 @@ export function NieuweFactuurFlow({
     );
   }
 
-  const totaalExcl = round2(regels.reduce((s, r) => s + r.bedrag, 0));
+  const bonnetjesTotaal = round2(selectedBonnetjes.reduce((s, b) => s + (b.bedrag || 0), 0));
+  const totaalExcl = round2(regels.reduce((s, r) => s + r.bedrag, 0) + bonnetjesTotaal);
   const btwPercentage = klant?.btw_percentage ?? 21;
   const btwBedrag = round2(totaalExcl * (btwPercentage / 100));
   const totaalIncl = round2(totaalExcl + btwBedrag);
@@ -183,6 +216,10 @@ export function NieuweFactuurFlow({
 
   function submit() {
     if (!klant) return;
+    if (regels.length === 0 && selectedBonnetjes.length === 0) {
+      toast.error("Geen regels of bonnetjes — niets om te factureren.");
+      return;
+    }
     start(async () => {
       const r = await generateFactuurAction({
         klant_id: klant.id,
@@ -195,6 +232,7 @@ export function NieuweFactuurFlow({
         include_uren_bijlage: includeUrenBijlage,
         regels,
         tijd_ids: alleTijdIds,
+        bonnetje_ids: [...bonnetjeIds],
       });
       if (!r.ok || !r.id) {
         toast.error(r.error ?? "Genereren mislukt");
@@ -214,7 +252,7 @@ export function NieuweFactuurFlow({
         <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="space-y-1.5 md:col-span-2">
             <Label>Klant</Label>
-            <Select value={klantId} onValueChange={(v) => { setKlantId(v); setGenerated(false); }}>
+            <Select value={klantId} onValueChange={(v) => { setKlantId(v); setGenerated(false); setBonnetjeIds(new Set()); }}>
               <SelectTrigger><SelectValue placeholder="Kies klant" /></SelectTrigger>
               <SelectContent>
                 {klanten.map((k) => <SelectItem key={k.id} value={k.id}>{k.naam}</SelectItem>)}
@@ -268,10 +306,72 @@ export function NieuweFactuurFlow({
         </Card>
       ) : null}
 
-      {generated ? (
+      {klantId && klantBonnetjes.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Stap 3: regels bewerken</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
+              <span>Doorbelaste bonnetjes</span>
+              <Badge variant="soft">{klantBonnetjes.length} beschikbaar</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Deze open kosten staan als &ldquo;doorbelasten&rdquo; gemarkeerd voor deze klant
+              in de gekozen periode. Vink aan welke je op de factuur wil zetten.
+            </p>
+            <div className="rounded-md border divide-y">
+              <label className="flex items-center gap-3 px-3 py-2 cursor-pointer bg-muted/30">
+                <Checkbox
+                  checked={
+                    bonnetjeIds.size === klantBonnetjes.length && klantBonnetjes.length > 0
+                  }
+                  onCheckedChange={toggleAllBonnetjes}
+                />
+                <span className="text-sm font-medium">Alles selecteren</span>
+              </label>
+              {klantBonnetjes.map((b) => (
+                <label
+                  key={b.id}
+                  className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-accent"
+                >
+                  <Checkbox
+                    checked={bonnetjeIds.has(b.id)}
+                    onCheckedChange={() => toggleBonnetje(b.id)}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">
+                      {b.leverancier || "—"}{" "}
+                      <span className="text-xs text-muted-foreground font-normal">
+                        · {BONNETJE_CATEGORIE_LABEL[b.categorie]}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {b.datum}
+                      {b.omschrijving ? ` · ${b.omschrijving}` : ""}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-sm font-semibold tabular-nums">{money(b.bedrag)}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            {selectedBonnetjes.length > 0 ? (
+              <div className="flex items-center justify-between text-sm pt-1">
+                <span className="text-muted-foreground">
+                  {selectedBonnetjes.length} geselecteerd
+                </span>
+                <span className="font-medium tabular-nums">{money(bonnetjesTotaal)}</span>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {generated || selectedBonnetjes.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Stap 3: bewerken en genereren</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Mobiel: regel-cards met gestapelde inputs */}
@@ -414,9 +514,20 @@ export function NieuweFactuurFlow({
               <span className="text-right font-semibold tabular-nums">€ {totaalIncl.toFixed(2)}</span>
             </div>
 
+            {selectedBonnetjes.length > 0 ? (
+              <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                + {selectedBonnetjes.length} doorbelaste bonnetje
+                {selectedBonnetjes.length === 1 ? "" : "s"} ({money(bonnetjesTotaal)}) komen
+                automatisch op deze factuur als extra regels.
+              </div>
+            ) : null}
+
             <div className="flex items-center justify-between border-t pt-4">
               <Badge variant="muted">Concept</Badge>
-              <Button onClick={submit} disabled={pending || regels.length === 0}>
+              <Button
+                onClick={submit}
+                disabled={pending || (regels.length === 0 && selectedBonnetjes.length === 0)}
+              >
                 {pending ? "Genereren..." : "Factuur genereren"}
               </Button>
             </div>

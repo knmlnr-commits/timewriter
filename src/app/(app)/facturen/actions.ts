@@ -7,6 +7,12 @@ import { requireUser } from "@/lib/auth";
 import { getKlant } from "@/lib/repo/klanten";
 import { createFactuur, deleteFactuur, getFactuur, round2, setIncludeUrenBijlage, updateFactuurRegels, updateFactuurStatus } from "@/lib/repo/facturen";
 import { markeerGefactureerd, ontkoppelFactuur } from "@/lib/repo/tijden";
+import {
+  listDoorbelastebareForKlant,
+  markeerBonnetjesGefactureerd,
+  ontkoppelBonnetjesFactuur,
+} from "@/lib/repo/bonnetjes";
+import { BONNETJE_CATEGORIE_LABEL } from "@/lib/types";
 import { redirect } from "next/navigation";
 import type { FactuurRegel, FactuurStatus } from "@/lib/types";
 
@@ -27,9 +33,13 @@ const createSchema = z.object({
   include_uren_bijlage: z.boolean().optional().default(false),
   uw_ordernummer: z.string().optional().default(""),
   betalingskenmerk: z.string().optional().default(""),
-  regels: z.array(regelSchema).min(1),
+  regels: z.array(regelSchema),
   tijd_ids: z.array(z.string()),
-});
+  bonnetje_ids: z.array(z.string()).default([]),
+}).refine(
+  (v) => v.regels.length > 0 || v.bonnetje_ids.length > 0,
+  { message: "Voeg minimaal één regel of bonnetje toe.", path: ["regels"] }
+);
 
 export async function generateFactuurAction(input: z.infer<typeof createSchema>): Promise<{ ok: boolean; id?: string; error?: string }> {
   const user = await requireUser();
@@ -53,6 +63,33 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
       bedrag: round2(r.bedrag),
       tijd_ids: r.tijd_ids,
     }));
+
+    // Doorbelaste bonnetjes als extra regels. We halen ze opnieuw op voor
+    // klant + periode en filteren tegen de geselecteerde ids — voorkomt dat
+    // een ander id sneaky aan een andere klant gekoppeld zou worden.
+    let validBonnetjeIds: string[] = [];
+    if (parsed.data.bonnetje_ids.length > 0) {
+      const beschikbaar = await listDoorbelastebareForKlant(user.id, klant.id);
+      const beschikbaarMap = new Map(beschikbaar.map((b) => [b.id, b]));
+      const selected = parsed.data.bonnetje_ids
+        .map((id) => beschikbaarMap.get(id))
+        .filter((b): b is NonNullable<typeof b> => Boolean(b));
+      validBonnetjeIds = selected.map((b) => b.id);
+      for (const bon of selected) {
+        const categorieLabel = BONNETJE_CATEGORIE_LABEL[bon.categorie] ?? "Kosten";
+        const omschr = bon.omschrijving
+          ? `${categorieLabel}: ${bon.leverancier} — ${bon.omschrijving}`
+          : `${categorieLabel}: ${bon.leverancier}`;
+        regels.push({
+          omschrijving: `${omschr} (${bon.datum})`,
+          aantal_uren: 1,
+          uurtarief: round2(bon.bedrag),
+          bedrag: round2(bon.bedrag),
+          tijd_ids: [],
+        });
+      }
+    }
+
     const totaal_excl_btw = round2(regels.reduce((s, r) => s + r.bedrag, 0));
     const btw_bedrag = round2(totaal_excl_btw * (btwPct / 100));
     const totaal_incl_btw = round2(totaal_excl_btw + btw_bedrag);
@@ -78,9 +115,13 @@ export async function generateFactuurAction(input: z.infer<typeof createSchema>)
     });
 
     await markeerGefactureerd(user.id, parsed.data.tijd_ids, factuur.id);
+    if (validBonnetjeIds.length > 0) {
+      await markeerBonnetjesGefactureerd(user.id, validBonnetjeIds, factuur.id);
+    }
 
     revalidatePath("/facturen");
     revalidatePath("/uren");
+    revalidatePath("/bonnetjes");
     revalidatePath("/dashboard");
     return { ok: true, id: factuur.id };
   } catch (e) {
@@ -120,6 +161,7 @@ export async function deleteFactuurAction(id: string): Promise<{ ok: boolean; er
     if (!f) return { ok: false, error: "Niet gevonden." };
     await deleteFactuur(user.id, id);
     await ontkoppelFactuur(user.id, id);
+    await ontkoppelBonnetjesFactuur(user.id, id);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Onbekende fout." };
   }

@@ -67,6 +67,69 @@ export async function updateBonnetje(
   return next;
 }
 
+/**
+ * Vind alle bonnetjes die op een factuur gezet kunnen worden:
+ * klant moet kloppen, doorbelast moet aan, en nog niet eerder
+ * gefactureerd. Optioneel beperkt tot een periode.
+ */
+export async function listDoorbelastebareForKlant(
+  uid: string,
+  klantId: string,
+  opts: { from?: string; to?: string } = {}
+): Promise<Bonnetje[]> {
+  const kv = getKv();
+  const ids = await kv.smembers(KEYS.bonnetjesIndex(uid));
+  if (ids.length === 0) return [];
+  const rows = await kv.mget<Bonnetje>(...ids.map((id) => KEYS.bonnetje(uid, id)));
+  return rows
+    .filter((b): b is Bonnetje => {
+      if (!b) return false;
+      if (b.klant_id !== klantId) return false;
+      if (!b.doorbelast) return false;
+      if (b.factuur_id) return false;
+      if (opts.from && b.datum < opts.from) return false;
+      if (opts.to && b.datum > opts.to) return false;
+      return true;
+    })
+    .sort((a, b) => a.datum.localeCompare(b.datum));
+}
+
+export async function markeerBonnetjesGefactureerd(
+  uid: string,
+  bonnetjeIds: string[],
+  factuurId: string
+): Promise<void> {
+  const kv = getKv();
+  for (const id of bonnetjeIds) {
+    const row = await kv.get<Bonnetje>(KEYS.bonnetje(uid, id));
+    if (!row) continue;
+    const next: Bonnetje = {
+      ...row,
+      factuur_id: factuurId,
+      updated_at: new Date().toISOString(),
+    };
+    await kv.set(KEYS.bonnetje(uid, id), next);
+  }
+}
+
+export async function ontkoppelBonnetjesFactuur(
+  uid: string,
+  factuurId: string
+): Promise<void> {
+  const kv = getKv();
+  const ids = await kv.smembers(KEYS.bonnetjesIndex(uid));
+  for (const id of ids) {
+    const row = await kv.get<Bonnetje>(KEYS.bonnetje(uid, id));
+    if (!row || row.factuur_id !== factuurId) continue;
+    const next: Bonnetje = {
+      ...row,
+      factuur_id: null,
+      updated_at: new Date().toISOString(),
+    };
+    await kv.set(KEYS.bonnetje(uid, id), next);
+  }
+}
+
 export async function deleteBonnetje(uid: string, id: string): Promise<void> {
   const kv = getKv();
   const existing = await kv.get<Bonnetje>(KEYS.bonnetje(uid, id));
