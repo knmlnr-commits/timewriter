@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clock, FileText, LayoutDashboard, Plus, Sparkles } from "lucide-react";
+import { Clock, LayoutDashboard, Plus, Receipt, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSnelInvoer } from "@/components/snel-invoer/snel-invoer-context";
 
@@ -10,7 +10,7 @@ const ITEMS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/uren", label: "Uren", icon: Clock },
   { href: "/uren/chat", label: "Chat", icon: Sparkles },
-  { href: "/facturen", label: "Facturen", icon: FileText },
+  { href: "/bonnetjes", label: "Bonnen", icon: Receipt },
 ] as const;
 
 /**

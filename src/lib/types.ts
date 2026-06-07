@@ -128,6 +128,62 @@ export type WeeklyPattern = {
   reminder_time?: string;
 };
 
+export const BONNETJE_CATEGORIEEN = [
+  "reiskosten",
+  "horeca",
+  "kantoor",
+  "software",
+  "telefoon_internet",
+  "marketing",
+  "opleiding",
+  "representatie",
+  "overig",
+] as const;
+
+export type BonnetjeCategorie = (typeof BONNETJE_CATEGORIEEN)[number];
+
+export const BONNETJE_CATEGORIE_LABEL: Record<BonnetjeCategorie, string> = {
+  reiskosten: "Reiskosten",
+  horeca: "Eten & drinken",
+  kantoor: "Kantoor",
+  software: "Software & abonnementen",
+  telefoon_internet: "Telefoon & internet",
+  marketing: "Marketing",
+  opleiding: "Opleiding & boeken",
+  representatie: "Representatie",
+  overig: "Overig",
+};
+
+export type Bonnetje = {
+  id: ID;
+  user_id: ID;
+  /** Datum op de bon. YYYY-MM-DD. */
+  datum: string;
+  /** Totaalbedrag incl. BTW in euro's. */
+  bedrag: number;
+  /** BTW-bedrag in euro's; null als niet bekend / niet getoond op bon. */
+  btw_bedrag: number | null;
+  /** ISO 4217. Default EUR. */
+  valuta: string;
+  /** Naam van de leverancier (winkel/restaurant/etc.). */
+  leverancier: string;
+  categorie: BonnetjeCategorie;
+  omschrijving: string;
+  /** Optionele klant waar deze kosten op doorbelast worden. */
+  klant_id: ID | null;
+  /** Optioneel project. */
+  project_id: ID | null;
+  /** Wanneer true en gekoppeld aan klant: kan op een factuur worden gezet. */
+  doorbelast: boolean;
+  /** Factuur waarop deze kosten al doorbelast zijn, null als nog open. */
+  factuur_id: ID | null;
+  /** Base64 data URL van de foto (geresized). Leeg als handmatige invoer zonder foto. */
+  foto_data: string;
+  bron: "handmatig" | "foto_ai";
+  created_at: string;
+  updated_at: string;
+};
+
 export type PushSubscriptionRecord = {
   id: ID;
   user_id: ID;

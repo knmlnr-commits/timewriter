@@ -51,6 +51,11 @@ export const KEYS = {
   // default werkweek (chat-assistent gebruikt dit als startpunt)
   defaultWeek: (uid: string) => `${NAMESPACE}:user:${uid}:default-week`,
 
+  // bonnetjes (expenses)
+  bonnetjesIndex: (uid: string) => `${NAMESPACE}:user:${uid}:bonnetjes:index`,
+  bonnetje: (uid: string, id: string) => `${NAMESPACE}:user:${uid}:bonnetje:${id}`,
+  bonnetjesByMonth: (uid: string, ym: string) => `${NAMESPACE}:user:${uid}:bonnetjes:month:${ym}`,
+
   // web push subscriptions (per-device)
   pushSubsIndex: (uid: string) => `${NAMESPACE}:user:${uid}:push-subs`,
   pushSub: (uid: string, subId: string) => `${NAMESPACE}:user:${uid}:push-sub:${subId}`,
